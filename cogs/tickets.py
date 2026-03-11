@@ -7,6 +7,7 @@ import os
 class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
     @app_commands.command(name="criarticket", description="um painel de tickets.")
     async def criarticket(self, interaction: discord.Interaction):
         
@@ -195,20 +196,20 @@ class Tickets(commands.Cog):
                 if staff_role:
                     overwrites[staff_role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
 
-            canal = await interaction.guild.create_text_channel(
-                name=f"ticket-{interaction.user.name}",
-                category=categoria,
-                overwrites=overwrites
-            )
+            canal_base = await interaction.guild.get_channel(int(categoria_id))
 
-            await interaction.response.send_message(
-                f"🎫 Ticket criado: {canal.mention}",
-                ephemeral=True
-            )
+            if not canal_base:
+                await interaction.response.send_message(
+                    "Categoria ou canal base para os tickets não configurado corretamente.",
+                    ephemeral=True
+                )
+                return
 
-            await canal.send(
-                f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe."
-            )
+            mensagem = f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe."
+
+            thread = await canal_base.create_thread(name=f"ticket-{interaction.user.name}", type=discord.ChannelType.private_thread, auto_archive_duration=60, reason="Novo ticket aberto", overwrites=overwrites)
+
+            await thread.send(mensagem)
 
 
 async def setup(bot):
