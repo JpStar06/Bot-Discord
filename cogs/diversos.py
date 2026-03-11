@@ -7,7 +7,8 @@ import os
 class Duversos(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    @app_command.
+    @bot.event()
+    Async await 
 
 
 async def setup(bot):
