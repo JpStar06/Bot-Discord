@@ -13,13 +13,15 @@ class Comandos(commands.Cog):
     async def criarembed(self, interaction: discord.Interaction):
 
         # cria pasta se não existir
-        if not os.path.exists("embeds"):
-            os.makedirs("embeds")
+        guild_id = interaction.guild.id
+        pasta = f"embeds/{guild_id}"
 
-        # gera próximo ID automaticamente
-        arquivos = os.listdir("embeds")
-        numero = len(arquivos) + 1
-        nome_arquivo = f"embeds/embed_{numero}.json"
+        if not os.path.exists(pasta):
+            os.makedirs(pasta)
+
+        arquivos = os.listdir(pasta)
+        numero = max([int(a.replace("ticket","").replace(".json","")) for a in arquivos], default=0) + 1
+        nome_arquivo = f"{pasta}/embed_{numero}.json"
 
         dados = {
             "title": "Título do Embed",
@@ -29,7 +31,7 @@ class Comandos(commands.Cog):
             "imagem": None
         }
 
-        with open(nome_arquivo, "w") as f:
+        with open(f"{pasta}/{nome_arquivo}", "w") as f:
             json.dump(dados, f, indent=4)
 
         embed = discord.Embed(
@@ -64,7 +66,8 @@ class Comandos(commands.Cog):
         imagem_url: str = None
     ):
 
-        nome_arquivo = f"embeds/embed_{id}.json"
+        guild_id = interaction.guild.id
+        nome_arquivo = f"embeds/{guild_id}/embed_{id}.json"
 
         if not os.path.exists(nome_arquivo):
             await interaction.response.send_message("Embed não encontrado.", ephemeral=True)
@@ -101,14 +104,22 @@ class Comandos(commands.Cog):
             await interaction.response.send_message("Nenhum embed criado ainda.", ephemeral=True)
             return
 
-        arquivos = os.listdir("embeds")
+        guild_id = interaction.guild.id
+        pasta = f"embeds/{guild_id}"
+
+        if not os.path.exists(pasta):
+            await interaction.response.send_message("Nenhum embed criado ainda.", ephemeral=True)
+            return
+
+        arquivos = os.listdir(pasta)
+
         if not arquivos:
             await interaction.response.send_message("Nenhum embed criado ainda.", ephemeral=True)
             return
 
         lista_embeds = []
         for arquivo in arquivos:
-            with open(f"embeds/{arquivo}", "r") as f:
+            with open(f"{pasta}/{arquivo}", "r") as f:
                 dados = json.load(f)
                 id = arquivo.split("_")[1].split(".")[0]
                 lista_embeds.append(f"ID: `{id}` - Título: `{dados['title']}`")
@@ -119,7 +130,9 @@ class Comandos(commands.Cog):
     @app_commands.command(name="deletarembed", description="Deleta um embed pelo ID.")
     @app_commands.describe(id="ID do embed a ser deletado")
     async def deletarembed(self, interaction: discord.Interaction, id: int):
-        nome_arquivo = f"embeds/embed_{id}.json"
+        
+        guild_id = interaction.guild.id
+        nome_arquivo = f"embeds/{guild_id}/embed_{id}.json"
 
         if not os.path.exists(nome_arquivo):
             await interaction.response.send_message("Embed não encontrado.", ephemeral=True)
@@ -131,7 +144,9 @@ class Comandos(commands.Cog):
     @app_commands.command(name="enviarembed", description="Envia um embed para o canal.")
     @app_commands.describe(id="ID do embed a ser enviado")
     async def enviarembed(self, interaction: discord.Interaction, id: int):
-        nome_arquivo = f"embeds/embed_{id}.json"
+        
+        guild_id = interaction.guild.id
+        nome_arquivo = f"embeds/{guild_id}/embed_{id}.json"
 
         if not os.path.exists(nome_arquivo):
             await interaction.response.send_message("Embed não encontrado.", ephemeral=True)
