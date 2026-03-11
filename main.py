@@ -16,6 +16,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     await bot.tree.sync()
     print(f"Logado como {bot.user}")
+    await bot.tree.sync()
 
 
 async def main():
