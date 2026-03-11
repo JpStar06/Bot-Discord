@@ -1,0 +1,11 @@
+{
+    "painel_1": {
+        "titulo": "Suporte",
+        "descricao": "Clique no bot\u00e3o abaixo para abrir um ticket de suporte.",
+        "cor": 3447003,
+        "emoji": "\ud83c\udfab",
+        "canal_id": null,
+        "staff_id": null,
+        "imagem": null
+    }
+}
