@@ -10,9 +10,13 @@ class Tickets(commands.Cog):
     @app_commands.command(name="criarticket", description="um painel de tickets.")
     async def criarticket(self, interaction: discord.Interaction):
         
-        if not os.path.exists("tickets"):
-            os.makedirs("tickets")
-        arquivos = os.listdir("tickets")
+        guild_id = interaction.guild.id
+        pasta = f"tickets/{guild_id}"
+
+        if not os.path.exists(pasta):
+            os.makedirs(pasta)
+
+        arquivos = os.listdir(pasta)
         numero = len(arquivos) + 1
         nome_arquivo = f"ticket{numero}.json"
 
@@ -27,7 +31,7 @@ class Tickets(commands.Cog):
                 "imagem": None
             }
         }
-        with open(f"tickets/{nome_arquivo}", "w") as f:
+        with open(f"{pasta}/{nome_arquivo}", "w") as f:
             json.dump(dados, f, indent=4)
         embed = discord.Embed(
             title=dados["painel_1"]["titulo"],
@@ -49,14 +53,17 @@ class Tickets(commands.Cog):
             await interaction.response.send_message("Nenhum ticket criado ainda.", ephemeral=True)
             return
 
-        arquivos = os.listdir("tickets")
-        if not arquivos:
+        guild_id = interaction.guild.id
+        pasta = f"tickets/{guild_id}"
+
+        if not os.path.exists(pasta):
             await interaction.response.send_message("Nenhum ticket criado ainda.", ephemeral=True)
             return
 
+        arquivos = os.listdir(pasta)
         lista_tickets = []
         for arquivo in arquivos:
-            with open(f"tickets/{arquivo}", "r") as f:
+            with open(f"{pasta}/{arquivo}", "r") as f:
                 dados = json.load(f)
                 id = arquivo.split(".")[0]
                 lista_tickets.append(f"ID: `{id}` - Título: `{dados['painel_1']['titulo']}`")
@@ -66,7 +73,8 @@ class Tickets(commands.Cog):
     @app_commands.command(name="deletarticket", description="Deleta um ticket pelo ID.")
     @app_commands.describe(id="ID do ticket a ser deletado")
     async def deletarticket(self, interaction: discord.Interaction, id: int):
-        nome_arquivo = f"tickets/ticket{id}.json"
+        guild_id = interaction.guild.id
+        nome_arquivo = f"tickets/{guild_id}/ticket{id}.json"
 
         if not os.path.exists(nome_arquivo):
             await interaction.response.send_message("Ticket não encontrado.", ephemeral=True)
@@ -78,7 +86,8 @@ class Tickets(commands.Cog):
     @app_commands.command(name="editarticket", description="Edita o título de um ticket.")
     @app_commands.describe(id="ID do ticket a ser editado", novo_titulo="Novo título do ticket", nova_descricao="Nova descrição do ticket", nova_cor="Nova cor do ticket (em hexadecimal)", novo_emoji="Novo emoji do ticket", novo_canal_id="Novo ID do canal do ticket", novo_staff_id="Novo ID do staff do ticket", nova_imagem="Nova imagem do ticket")
     async def editarticket(self, interaction: discord.Interaction, id: int, novo_titulo: str = None, nova_descricao: str = None, nova_cor: int = None, novo_emoji: str = None, novo_canal_id: int = None, novo_staff_id: int = None, nova_imagem: str = None):
-        nome_arquivo = f"tickets/ticket{id}.json"
+        guild_id = interaction.guild.id
+        nome_arquivo = f"tickets/{guild_id}/ticket{id}.json"
 
         if not os.path.exists(nome_arquivo):
             await interaction.response.send_message("Ticket não encontrado.", ephemeral=True)
@@ -116,7 +125,9 @@ class Tickets(commands.Cog):
     @app_commands.command(name="enviarticket", description="Envia o painel de ticket para o canal.")
     @app_commands.describe(id="ID do ticket a ser enviado")
     async def enviarticket(self, interaction: discord.Interaction, id: int):
-        nome_arquivo = f"tickets/ticket{id}.json"
+        guild_id = interaction.guild.id
+        pasta = f"tickets/{guild_id}"
+        nome_arquivo = f"{pasta}/ticket{id}.json"
 
         if not os.path.exists(nome_arquivo):
             await interaction.response.send_message("Ticket não encontrado.", ephemeral=True)
