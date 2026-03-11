@@ -3,12 +3,14 @@ from discord import app_commands
 from discord.ext import commands
 import json
 import os
+import ramdom
 
 class Duversos(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     @bot.event()
-    Async await 
+    Async def 8ball():
+      
 
 
 async def setup(bot):
