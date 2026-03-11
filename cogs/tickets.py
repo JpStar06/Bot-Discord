@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 import json
 import os
+import asyncio
 
 class Tickets(commands.Cog):
     def __init__(self, bot):
@@ -206,9 +207,31 @@ class Tickets(commands.Cog):
                 ephemeral=True
             )
 
-            await canal.send(
-                f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe."
+            view = discord.ui.View()
+
+            botao_fechar = discord.ui.Button(
+                label="Fechar Ticket",
+                style=discord.ButtonStyle.danger,
+                emoji="🔒",
+                custom_id="fechar_ticket"
             )
+
+            view.add_item(botao_fechar)
+
+            await canal.send(
+                f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe.",
+                view=view
+            )
+        if custom_id == "fechar_ticket":
+
+            await interaction.response.send_message(
+                "🔒 Fechando ticket em 5 segundos...",
+                ephemeral=True
+            )
+
+            await asyncio.sleep(5)
+
+            await interaction.channel.delete()
 
 
 async def setup(bot):
