@@ -111,10 +111,10 @@ class Tickets(commands.Cog):
             dados["painel_1"]["emoji"] = novo_emoji
 
         if novo_canal_id:
-            dados["painel_1"]["canal_id"] = novo_canal_id
+            dados["painel_1"]["canal_id"] = novo_canal_id.id
 
         if novo_staff_id:
-            dados["painel_1"]["staff_id"] = novo_staff_id
+            dados["painel_1"]["staff_id"] = novo_staff_id.id
 
         if nova_imagem:
             dados["painel_1"]["imagem"] = nova_imagem
