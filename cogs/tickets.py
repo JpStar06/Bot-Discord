@@ -88,6 +88,8 @@ class Tickets(commands.Cog):
     
     async def editarticket(self, interaction: discord.Interaction, id: int, novo_titulo: str = None, nova_descricao: str = None, nova_cor: int = None, novo_emoji: str = None, novo_canal_id: str = 
     None, novo_staff_id: str = None, nova_imagem: str = None):
+        novo_canal_id = int(novo_canal_id) if novo_canal_id else None
+        novo_staff_id = int(novo_staff_id) if novo_staff_id else None
         guild_id = interaction.guild.id
         nome_arquivo = f"tickets/{guild_id}/ticket{id}.json"
 
