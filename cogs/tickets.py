@@ -209,7 +209,10 @@ class Tickets(commands.Cog):
 
             thread = await canal_base.create_thread(name=f"ticket-{interaction.user.name}", type=discord.ChannelType.private_thread, auto_archive_duration=60, reason="Novo ticket aberto", overwrites=overwrites)
 
-            await thread.send(mensagem)
+            await interaction.response.send_message(
+                f"Ticket criado: {thread.mention}",
+                ephemeral=True
+            )
 
 
 async def setup(bot):
