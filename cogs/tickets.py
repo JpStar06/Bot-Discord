@@ -86,8 +86,8 @@ class Tickets(commands.Cog):
     @app_commands.command(name="editarticket", description="Edita o título de um ticket.")
     @app_commands.describe(id="ID do ticket a ser editado", novo_titulo="Novo título do ticket", nova_descricao="Nova descrição do ticket", nova_cor="Nova cor do ticket (em hexadecimal)", novo_emoji="Novo emoji do ticket", novo_canal_id="Novo ID do canal do ticket", novo_staff_id="Novo ID do staff do ticket", nova_imagem="Nova imagem do ticket")
     
-    async def editarticket(self, interaction: discord.Interaction, id: int, novo_titulo: str = None, nova_descricao: str = None, nova_cor: int = None, novo_emoji: str = None, novo_canal_id: str = 
-    None, novo_staff_id: str = None, nova_imagem: str = None):
+    async def editarticket(self, interaction: discord.Interaction, id: int, novo_titulo: str = None, nova_descricao: str = None, nova_cor: int = None, novo_emoji: str = None, novo_canal_id: int = 
+    None, novo_staff_id: int = None, nova_imagem: str = None):
     
         guild_id = interaction.guild.id
         nome_arquivo = f"tickets/{guild_id}/ticket{id}.json"
@@ -161,6 +161,9 @@ class Tickets(commands.Cog):
 
         custom_id = interaction.data.get("custom_id")
 
+        if not custom_id:
+            return
+
         if custom_id.startswith("abrir_ticket_"):
 
             id_ticket = custom_id.split("_")[-1]
@@ -175,7 +178,7 @@ class Tickets(commands.Cog):
                 )
                 return
 
-            with open(nome_arquivo, "r") as f:
+            with open(nome_arquivo) as f:
                 dados = json.load(f)
 
             categoria_id = dados["painel_1"]["canal_id"]
@@ -205,7 +208,7 @@ class Tickets(commands.Cog):
             )
 
             await canal.send(
-                f"{interaction.user.mention} criou um ticket.\nAguarde a equipe responder."
+                f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe."
             )
 
 
