@@ -7,7 +7,6 @@ import os
 class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
     @app_commands.command(name="criarticket", description="um painel de tickets.")
     async def criarticket(self, interaction: discord.Interaction):
         
@@ -184,6 +183,8 @@ class Tickets(commands.Cog):
             categoria_id = dados["painel_1"]["canal_id"]
             staff_id = dados["painel_1"]["staff_id"]
 
+            categoria = interaction.guild.get_channel(int(categoria_id)) if categoria_id else None
+
             overwrites = {
                 interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
                 interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True)
@@ -194,22 +195,19 @@ class Tickets(commands.Cog):
                 if staff_role:
                     overwrites[staff_role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
 
-            canal_base = interaction.guild.get_channel(int(categoria_id))
-
-            if not canal_base:
-                await interaction.response.send_message(
-                    "Categoria ou canal base para os tickets não configurado corretamente.",
-                    ephemeral=True
-                )
-                return
-
-            mensagem = f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe."
-
-            thread = await mensagem.create_thread(name=f"ticket-{interaction.user.name}", type=discord.ChannelType.private_thread, auto_archive_duration=60)
+            canal = await interaction.guild.create_text_channel(
+                name=f"ticket-{interaction.user.name}",
+                category=categoria,
+                overwrites=overwrites
+            )
 
             await interaction.response.send_message(
-                f"Ticket criado: {thread.mention}",
+                f"🎫 Ticket criado: {canal.mention}",
                 ephemeral=True
+            )
+
+            await canal.send(
+                f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe."
             )
 
 
