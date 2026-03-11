@@ -4,6 +4,7 @@ from discord.ext import commands
 import json
 import os
 import asyncio
+import SQLite
 
 class Tickets(commands.Cog):
     def __init__(self, bot):
