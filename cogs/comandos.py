@@ -168,16 +168,5 @@ class Comandos(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-    async def ban(self, interaction: discord.Interaction, user: discord.Member, reason: str = None):
-        if user.top_role >= interaction.user.top_role:
-            await interaction.response.send_message("Você não pode banir esse usuário.",ephemeral=True)
-            return
-        try:
-            await user.send(f"Você foi banido do servidor **{interaction.guild.name}**. Motivo: {reason if reason else 'Sem motivo especificado.'}")
-        except:
-            pass
-        await user.ban(reason=reason)
-        await interaction.response.send_message(f"Usuário {user.mention} banido com sucesso. Motivo: {reason if reason else 'Sem motivo especificado.'}")
-
 async def setup(bot):
     await bot.add_cog(Comandos(bot))
