@@ -7,3 +7,8 @@ import os
 class Duversos(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+    @app_command.
+
+
+async def setup(bot):
+    await bot.add_cog(Mods(bot))
