@@ -88,8 +88,7 @@ class Tickets(commands.Cog):
     
     async def editarticket(self, interaction: discord.Interaction, id: int, novo_titulo: str = None, nova_descricao: str = None, nova_cor: int = None, novo_emoji: str = None, novo_canal_id: str = 
     None, novo_staff_id: str = None, nova_imagem: str = None):
-        novo_canal_id = int(novo_canal_id) if novo_canal_id else None
-        novo_staff_id = int(novo_staff_id) if novo_staff_id else None
+    
         guild_id = interaction.guild.id
         nome_arquivo = f"tickets/{guild_id}/ticket{id}.json"
 
@@ -153,6 +152,61 @@ class Tickets(commands.Cog):
         view.add_item(button)
 
         await interaction.response.send_message(embed=embed, view=view)
+
+    @commands.Cog.listener()
+    async def on_interaction(self, interaction: discord.Interaction):
+
+        if interaction.type != discord.InteractionType.component:
+            return
+
+        custom_id = interaction.data.get("custom_id")
+
+        if custom_id.startswith("abrir_ticket_"):
+
+            id_ticket = custom_id.split("_")[-1]
+
+            guild_id = interaction.guild.id
+            nome_arquivo = f"tickets/{guild_id}/ticket{id_ticket}.json"
+
+            if not os.path.exists(nome_arquivo):
+                await interaction.response.send_message(
+                    "Configuração do ticket não encontrada.",
+                    ephemeral=True
+                )
+                return
+
+            with open(nome_arquivo, "r") as f:
+                dados = json.load(f)
+
+            categoria_id = dados["painel_1"]["canal_id"]
+            staff_id = dados["painel_1"]["staff_id"]
+
+            categoria = interaction.guild.get_channel(int(categoria_id)) if categoria_id else None
+
+            overwrites = {
+                interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
+                interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True)
+            }
+
+            if staff_id:
+                staff_role = interaction.guild.get_role(int(staff_id))
+                if staff_role:
+                    overwrites[staff_role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
+
+            canal = await interaction.guild.create_text_channel(
+                name=f"ticket-{interaction.user.name}",
+                category=categoria,
+                overwrites=overwrites
+            )
+
+            await interaction.response.send_message(
+                f"🎫 Ticket criado: {canal.mention}",
+                ephemeral=True
+            )
+
+            await canal.send(
+                f"{interaction.user.mention} criou um ticket.\nAguarde a equipe responder."
+            )
 
 
 async def setup(bot):
