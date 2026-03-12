@@ -58,7 +58,7 @@ class Tickets(commands.Cog):
             embed=embed,
             view=view
         )
-print("embed criado com sucesso")
+      print("ticket criado com sucesso")
 
     # LISTAR TICKETS
     @app_commands.command(name="listartickets", description="Lista tickets.")
