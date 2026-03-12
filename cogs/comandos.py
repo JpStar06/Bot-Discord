@@ -1,22 +1,25 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import sqlite3
+from database import get_connection
+
 
 class Comandos(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # 🔹 CRIAR EMBED
+
+    # CRIAR EMBED
     @app_commands.command(name="criarembed", description="Cria um embed padrão.")
     async def criarembed(self, interaction: discord.Interaction):
 
-        conn = sqlite3.connect("Aiko.db")
+        conn = get_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
         INSERT INTO embeds (guild_id, title, description, color, image)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
+        RETURNING id
         """, (
             interaction.guild.id,
             "Título do Embed",
@@ -25,8 +28,9 @@ class Comandos(commands.Cog):
             None
         ))
 
+        embed_id = cursor.fetchone()[0]
+
         conn.commit()
-        embed_id = cursor.lastrowid
         conn.close()
 
         embed = discord.Embed(
@@ -40,7 +44,8 @@ class Comandos(commands.Cog):
             embed=embed
         )
 
-    # 🔹 EDITAR EMBED
+
+    # EDITAR EMBED
     @app_commands.command(name="editarembed", description="Edita um embed.")
     async def editarembed(
         self,
@@ -52,10 +57,14 @@ class Comandos(commands.Cog):
         imagem_url: str = None
     ):
 
-        conn = sqlite3.connect("bot.db")
+        conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM embeds WHERE id=? AND guild_id=?", (id, interaction.guild.id))
+        cursor.execute(
+            "SELECT title, description, color, image FROM embeds WHERE id=%s AND guild_id=%s",
+            (id, interaction.guild.id)
+        )
+
         embed_data = cursor.fetchone()
 
         if not embed_data:
@@ -64,14 +73,14 @@ class Comandos(commands.Cog):
             return
 
         title = novo_titulo
-        description = novo_descricao if novo_descricao else embed_data[3]
-        color = nova_cor if nova_cor else embed_data[4]
-        image = imagem_url if imagem_url else embed_data[5]
+        description = novo_descricao if novo_descricao else embed_data[1]
+        color = nova_cor if nova_cor else embed_data[2]
+        image = imagem_url if imagem_url else embed_data[3]
 
         cursor.execute("""
         UPDATE embeds
-        SET title=?, description=?, color=?, image=?
-        WHERE id=? AND guild_id=?
+        SET title=%s, description=%s, color=%s, image=%s
+        WHERE id=%s AND guild_id=%s
         """, (title, description, color, image, id, interaction.guild.id))
 
         conn.commit()
@@ -88,16 +97,20 @@ class Comandos(commands.Cog):
 
         await interaction.response.send_message("Embed atualizado:", embed=embed)
 
-    # 🔹 LISTAR EMBEDS
+
+    # LISTAR EMBEDS
     @app_commands.command(name="listarembeds", description="Lista os embeds.")
     async def listarembeds(self, interaction: discord.Interaction):
 
-        conn = sqlite3.connect("bot.db")
+        conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id, title FROM embeds WHERE guild_id=?", (interaction.guild.id,))
-        embeds = cursor.fetchall()
+        cursor.execute(
+            "SELECT id, title FROM embeds WHERE guild_id=%s",
+            (interaction.guild.id,)
+        )
 
+        embeds = cursor.fetchall()
         conn.close()
 
         if not embeds:
@@ -108,31 +121,36 @@ class Comandos(commands.Cog):
 
         await interaction.response.send_message(f"**Embeds:**\n{lista}")
 
-    # 🔹 DELETAR EMBED
+
+    # DELETAR EMBED
     @app_commands.command(name="deletarembed", description="Deleta um embed.")
     async def deletarembed(self, interaction: discord.Interaction, id: int):
 
-        conn = sqlite3.connect("bot.db")
+        conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("DELETE FROM embeds WHERE id=? AND guild_id=?", (id, interaction.guild.id))
+        cursor.execute(
+            "DELETE FROM embeds WHERE id=%s AND guild_id=%s",
+            (id, interaction.guild.id)
+        )
 
         conn.commit()
         conn.close()
 
         await interaction.response.send_message(f"Embed `{id}` deletado.")
 
-    # 🔹 ENVIAR EMBED
+
+    # ENVIAR EMBED
     @app_commands.command(name="enviarembed", description="Envia um embed.")
     async def enviarembed(self, interaction: discord.Interaction, id: int):
 
-        conn = sqlite3.connect("bot.db")
+        conn = get_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
         SELECT title, description, color, image
         FROM embeds
-        WHERE id=? AND guild_id=?
+        WHERE id=%s AND guild_id=%s
         """, (id, interaction.guild.id))
 
         resultado = cursor.fetchone()

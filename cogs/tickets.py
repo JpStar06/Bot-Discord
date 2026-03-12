@@ -1,23 +1,26 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import sqlite3
 import asyncio
+from database import get_connection
+
 
 class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+
     # CRIAR CONFIGURAÇÃO DE TICKET
     @app_commands.command(name="criarticket", description="Cria um painel de ticket.")
     async def criarticket(self, interaction: discord.Interaction):
 
-        conn = sqlite3.connect("bot.db")
+        conn = get_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
         INSERT INTO tickets (guild_id, titulo, descricao, cor, emoji, canal_id, staff_id, imagem)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING id
         """, (
             interaction.guild.id,
             "Suporte",
@@ -29,8 +32,9 @@ class Tickets(commands.Cog):
             None
         ))
 
+        ticket_id = cursor.fetchone()[0]
+
         conn.commit()
-        ticket_id = cursor.lastrowid
         conn.close()
 
         embed = discord.Embed(
@@ -40,6 +44,7 @@ class Tickets(commands.Cog):
         )
 
         view = discord.ui.View()
+
         button = discord.ui.Button(
             label="Abrir Ticket",
             emoji="🎫",
@@ -55,17 +60,18 @@ class Tickets(commands.Cog):
             view=view
         )
 
+
     # LISTAR TICKETS
     @app_commands.command(name="listartickets", description="Lista tickets.")
     async def listartickets(self, interaction: discord.Interaction):
 
-        conn = sqlite3.connect("bot.db")
+        conn = get_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
         SELECT id, titulo
         FROM tickets
-        WHERE guild_id=?
+        WHERE guild_id=%s
         """, (interaction.guild.id,))
 
         tickets = cursor.fetchall()
@@ -79,16 +85,17 @@ class Tickets(commands.Cog):
 
         await interaction.response.send_message(f"**Tickets:**\n{lista}")
 
+
     # DELETAR CONFIGURAÇÃO
     @app_commands.command(name="deletarticket", description="Deleta um ticket.")
     async def deletarticket(self, interaction: discord.Interaction, id: int):
 
-        conn = sqlite3.connect("bot.db")
+        conn = get_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
         DELETE FROM tickets
-        WHERE id=? AND guild_id=?
+        WHERE id=%s AND guild_id=%s
         """, (id, interaction.guild.id))
 
         conn.commit()
@@ -96,17 +103,18 @@ class Tickets(commands.Cog):
 
         await interaction.response.send_message(f"Ticket `{id}` deletado.")
 
+
     # ENVIAR PAINEL
     @app_commands.command(name="enviarticket", description="Envia painel de ticket.")
     async def enviarticket(self, interaction: discord.Interaction, id: int):
 
-        conn = sqlite3.connect("bot.db")
+        conn = get_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
         SELECT titulo, descricao, cor, emoji
         FROM tickets
-        WHERE id=? AND guild_id=?
+        WHERE id=%s AND guild_id=%s
         """, (id, interaction.guild.id))
 
         dados = cursor.fetchone()
@@ -135,6 +143,7 @@ class Tickets(commands.Cog):
 
         await interaction.response.send_message(embed=embed, view=view)
 
+
     # EVENTO DOS BOTÕES
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
@@ -147,18 +156,19 @@ class Tickets(commands.Cog):
         if not custom_id:
             return
 
+
         # ABRIR TICKET
         if custom_id.startswith("abrir_ticket_"):
 
             ticket_id = int(custom_id.split("_")[-1])
 
-            conn = sqlite3.connect("bot.db")
+            conn = get_connection()
             cursor = conn.cursor()
 
             cursor.execute("""
             SELECT titulo
             FROM tickets
-            WHERE id=? AND guild_id=?
+            WHERE id=%s AND guild_id=%s
             """, (ticket_id, interaction.guild.id))
 
             dados = cursor.fetchone()
@@ -200,6 +210,7 @@ class Tickets(commands.Cog):
                 f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe.",
                 view=view
             )
+
 
         # FECHAR TICKET
         if custom_id == "fechar_ticket":
