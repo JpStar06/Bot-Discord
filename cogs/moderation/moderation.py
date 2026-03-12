@@ -11,12 +11,10 @@ class Moderation(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.bot.tree.add_command(self.mod)
 
 
     @mod.command(name="ban", description="Banir um membro")
     async def ban(self, interaction: discord.Interaction, member: discord.Member, reason: str = "Sem motivo"):
-
         await ban_member(interaction.guild, member, reason)
 
         await interaction.response.send_message(
@@ -26,7 +24,6 @@ class Moderation(commands.Cog):
 
     @mod.command(name="kick", description="Expulsar um membro")
     async def kick(self, interaction: discord.Interaction, member: discord.Member, reason: str = "Sem motivo"):
-
         await kick_member(member, reason)
 
         await interaction.response.send_message(
@@ -36,7 +33,6 @@ class Moderation(commands.Cog):
 
     @mod.command(name="mute", description="Mutar um membro")
     async def mute(self, interaction: discord.Interaction, member: discord.Member, minutos: int, reason: str = "Sem motivo"):
-
         await mute_member(member, minutos, reason)
 
         await interaction.response.send_message(
