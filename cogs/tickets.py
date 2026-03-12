@@ -9,7 +9,6 @@ class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-
     # CRIAR CONFIGURAÇÃO DE TICKET
     @app_commands.command(name="criarticket", description="Cria um painel de ticket.")
     async def criarticket(self, interaction: discord.Interaction):
@@ -60,7 +59,6 @@ class Tickets(commands.Cog):
             view=view
         )
 
-
     # LISTAR TICKETS
     @app_commands.command(name="listartickets", description="Lista tickets.")
     async def listartickets(self, interaction: discord.Interaction):
@@ -85,7 +83,6 @@ class Tickets(commands.Cog):
 
         await interaction.response.send_message(f"**Tickets:**\n{lista}")
 
-
     # DELETAR CONFIGURAÇÃO
     @app_commands.command(name="deletarticket", description="Deleta um ticket.")
     async def deletarticket(self, interaction: discord.Interaction, id: int):
@@ -102,7 +99,6 @@ class Tickets(commands.Cog):
         conn.close()
 
         await interaction.response.send_message(f"Ticket `{id}` deletado.")
-
 
     # ENVIAR PAINEL
     @app_commands.command(name="enviarticket", description="Envia painel de ticket.")
@@ -142,7 +138,96 @@ class Tickets(commands.Cog):
         view.add_item(button)
 
         await interaction.response.send_message(embed=embed, view=view)
+    
+    @app_commands.command(name="editarticket", description="Edita a configuração de um ticket.")
+    @app_commands.describe(
+        id="ID do ticket",
+        titulo="Novo título",
+        descricao="Nova descrição",
+        cor="Nova cor em HEX (ex: FF0000)",
+        emoji="Novo emoji do botão",
+        imagem="URL da imagem",
+        canal="Canal onde o ticket será criado",
+        staff="Cargo da equipe de suporte"
+    )
+    async def editarticket(
+        self,
+        interaction: discord.Interaction,
+        id: int,
+        titulo: str = None,
+        descricao: str = None,
+        cor: str = None,
+        emoji: str = None,
+        imagem: str = None,
+        canal: discord.TextChannel = None,
+        staff: discord.Role = None
+    ):
 
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        SELECT titulo, descricao, cor, emoji, canal_id, staff_id, imagem
+        FROM tickets
+        WHERE id=%s AND guild_id=%s
+        """, (id, interaction.guild.id))
+
+        ticket = cursor.fetchone()
+
+        if not ticket:
+            await interaction.response.send_message(
+                "Ticket não encontrado.",
+                ephemeral=True
+            )
+            conn.close()
+            return
+
+        novo_titulo = titulo if titulo else ticket[0]
+        nova_descricao = descricao if descricao else ticket[1]
+        nova_cor = int(cor, 16) if cor else ticket[2]
+        novo_emoji = emoji if emoji else ticket[3]
+        novo_canal = canal.id if canal else ticket[4]
+        novo_staff = staff.id if staff else ticket[5]
+        nova_imagem = imagem if imagem else ticket[6]
+
+        cursor.execute("""
+        UPDATE tickets
+        SET titulo=%s,
+            descricao=%s,
+            cor=%s,
+            emoji=%s,
+            canal_id=%s,
+            staff_id=%s,
+            imagem=%s
+        WHERE id=%s AND guild_id=%s
+        """, (
+            novo_titulo,
+            nova_descricao,
+            nova_cor,
+            novo_emoji,
+            novo_canal,
+            novo_staff,
+            nova_imagem,
+            id,
+            interaction.guild.id
+        ))
+
+        conn.commit()
+        conn.close()
+
+        embed = discord.Embed(
+            title=novo_titulo,
+            description=nova_descricao,
+            color=nova_cor
+        )
+
+        if nova_imagem:
+            embed.set_image(url=nova_imagem)
+
+        await interaction.response.send_message(
+            f"✅ Ticket `{id}` atualizado com sucesso.",
+            embed=embed
+        )
 
     # EVENTO DOS BOTÕES
     @commands.Cog.listener()
@@ -155,7 +240,6 @@ class Tickets(commands.Cog):
 
         if not custom_id:
             return
-
 
         # ABRIR TICKET
         if custom_id.startswith("abrir_ticket_"):
@@ -223,6 +307,7 @@ class Tickets(commands.Cog):
             await asyncio.sleep(5)
 
             await interaction.channel.delete()
+
 
 
 async def setup(bot):
