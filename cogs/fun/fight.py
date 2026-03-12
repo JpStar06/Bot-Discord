@@ -4,7 +4,7 @@ from discord.ext import commands
 import random
 
 
-class ball(commands.Cog):
+class fight(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
@@ -23,4 +23,4 @@ class ball(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(ball(bot))
+    await bot.add_cog(fight(bot))
