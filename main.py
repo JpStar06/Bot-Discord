@@ -20,6 +20,7 @@ async def load_cogs():
             if file.endswith(".py"):
                 path = os.path.join(root, file)
                 module = path.replace("/", ".").replace("\\", ".")[:-3]
+                print(path)
                 await bot.load_extension(module)
 
 async def main():
