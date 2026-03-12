@@ -212,6 +212,7 @@ class Tickets(commands.Cog):
             interaction.guild.id
         ))
 
+
         conn.commit()
         conn.close()
 
