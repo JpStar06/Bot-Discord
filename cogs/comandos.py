@@ -12,16 +12,20 @@ class Comandos(commands.Cog):
     @app_commands.command(name="criarembed", description="Cria um embed padrão.")
     async def criarembed(self, interaction: discord.Interaction):
 
-        # cria pasta se não existir
         guild_id = interaction.guild.id
         pasta = f"embeds/{guild_id}"
 
         if not os.path.exists(pasta):
             os.makedirs(pasta)
 
-        arquivos = os.listdir(pasta)
-        numero = max([int(a.replace("ticket","").replace(".json","")) for a in arquivos], default=0) + 1
-        nome_arquivo = f"{pasta}/embed_{numero}.json"
+        arquivos = [a for a in os.listdir(pasta) if a.startswith("embed_")]
+
+        numero = max(
+            [int(a.replace("embed_", "").replace(".json", "")) for a in arquivos],
+            default=0
+        ) + 1
+
+        nome_arquivo = f"embed_{numero}.json"
 
         dados = {
             "title": "Título do Embed",
@@ -39,6 +43,7 @@ class Comandos(commands.Cog):
             description=dados["description"],
             color=dados["color"],
         )
+
         if dados["imagem"]:
             embed.set_image(url=dados["imagem"])
 
@@ -77,10 +82,13 @@ class Comandos(commands.Cog):
             dados = json.load(f)
 
         dados["title"] = novo_titulo
+
         if novo_descricao:
             dados["description"] = novo_descricao
+
         if nova_cor:
             dados["color"] = nova_cor
+
         if imagem_url:
             dados["imagem"] = imagem_url
 
@@ -97,12 +105,10 @@ class Comandos(commands.Cog):
             embed.set_image(url=dados["imagem"])
 
         await interaction.response.send_message("Embed atualizado:", embed=embed)
-    
+
+    # 🔹 LISTAR EMBEDS
     @app_commands.command(name="listarembeds", description="Lista os embeds criados.")
     async def listarembeds(self, interaction: discord.Interaction):
-        if not os.path.exists("embeds"):
-            await interaction.response.send_message("Nenhum embed criado ainda.", ephemeral=True)
-            return
 
         guild_id = interaction.guild.id
         pasta = f"embeds/{guild_id}"
@@ -111,26 +117,30 @@ class Comandos(commands.Cog):
             await interaction.response.send_message("Nenhum embed criado ainda.", ephemeral=True)
             return
 
-        arquivos = os.listdir(pasta)
+        arquivos = [a for a in os.listdir(pasta) if a.startswith("embed_")]
 
         if not arquivos:
             await interaction.response.send_message("Nenhum embed criado ainda.", ephemeral=True)
             return
 
         lista_embeds = []
+
         for arquivo in arquivos:
             with open(f"{pasta}/{arquivo}", "r") as f:
                 dados = json.load(f)
-                id = arquivo.split("_")[1].split(".")[0]
-                lista_embeds.append(f"ID: `{id}` - Título: `{dados['title']}`")
+
+            id = arquivo.split("_")[1].split(".")[0]
+            lista_embeds.append(f"ID: `{id}` - Título: `{dados['title']}`")
 
         resposta = "\n".join(lista_embeds)
+
         await interaction.response.send_message(f"**Embeds Criados:**\n{resposta}")
 
+    # 🔹 DELETAR EMBED
     @app_commands.command(name="deletarembed", description="Deleta um embed pelo ID.")
     @app_commands.describe(id="ID do embed a ser deletado")
     async def deletarembed(self, interaction: discord.Interaction, id: int):
-        
+
         guild_id = interaction.guild.id
         nome_arquivo = f"embeds/{guild_id}/embed_{id}.json"
 
@@ -139,12 +149,14 @@ class Comandos(commands.Cog):
             return
 
         os.remove(nome_arquivo)
+
         await interaction.response.send_message(f"Embed com ID `{id}` deletado com sucesso.")
 
+    # 🔹 ENVIAR EMBED
     @app_commands.command(name="enviarembed", description="Envia um embed para o canal.")
     @app_commands.describe(id="ID do embed a ser enviado")
     async def enviarembed(self, interaction: discord.Interaction, id: int):
-        
+
         guild_id = interaction.guild.id
         nome_arquivo = f"embeds/{guild_id}/embed_{id}.json"
 
@@ -158,15 +170,21 @@ class Comandos(commands.Cog):
         embed = discord.Embed(
             title=dados["title"],
             description=dados["description"],
-            color=dados["color"],
+            color=dados["color"]
         )
+
         if dados["imagem"]:
             embed.set_image(url=dados["imagem"])
 
         for field in dados["fields"]:
-            embed.add_field(name=field["name"], value=field["value"], inline=field.get("inline", False))
+            embed.add_field(
+                name=field["name"],
+                value=field["value"],
+                inline=field.get("inline", False)
+            )
 
         await interaction.response.send_message(embed=embed)
+
 
 async def setup(bot):
     await bot.add_cog(Comandos(bot))
