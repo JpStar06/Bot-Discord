@@ -18,7 +18,6 @@ async def on_ready():
     print(f"Logado como {bot.user}")
     await bot.tree.sync()
 
-
 async def main():
     async with bot:
         await bot.load_extension("cogs.comandos")

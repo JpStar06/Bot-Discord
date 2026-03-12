@@ -1,158 +1,141 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import json
-import os
+import sqlite3
 import asyncio
 
 class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    @app_commands.command(name="criarticket", description="um painel de tickets.")
+
+    # CRIAR CONFIGURAÇÃO DE TICKET
+    @app_commands.command(name="criarticket", description="Cria um painel de ticket.")
     async def criarticket(self, interaction: discord.Interaction):
-        
-        guild_id = interaction.guild.id
-        pasta = f"tickets/{guild_id}"
 
-        if not os.path.exists(pasta):
-            os.makedirs(pasta)
+        conn = sqlite3.connect("bot.db")
+        cursor = conn.cursor()
 
-        arquivos = os.listdir(pasta)
-        numero = len(arquivos) + 1
-        nome_arquivo = f"ticket{numero}.json"
+        cursor.execute("""
+        INSERT INTO tickets (guild_id, titulo, descricao, cor, emoji, canal_id, staff_id, imagem)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            interaction.guild.id,
+            "Suporte",
+            "Clique no botão abaixo para abrir um ticket de suporte.",
+            0x3498db,
+            "🎫",
+            interaction.channel.id,
+            None,
+            None
+        ))
 
-        dados = {
-            "painel_1": {
-                "titulo": "Suporte",
-                "descricao": "Clique no botão abaixo para abrir um ticket de suporte.",
-                "cor": 0x3498db,
-                "emoji": "🎫",
-                "canal_id": None,
-                "staff_id": None,
-                "imagem": None
-            }
-        }
-        with open(f"{pasta}/{nome_arquivo}", "w") as f:
-            json.dump(dados, f, indent=4)
+        conn.commit()
+        ticket_id = cursor.lastrowid
+        conn.close()
+
         embed = discord.Embed(
-            title=dados["painel_1"]["titulo"],
-            description=dados["painel_1"]["descricao"],
-            color=dados["painel_1"]["cor"]
+            title="Suporte",
+            description="Clique no botão abaixo para abrir um ticket de suporte.",
+            color=0x3498db
         )
-        if dados["painel_1"]["imagem"]:
-            embed.set_image(url=dados["painel_1"]["imagem"])
 
         view = discord.ui.View()
-        button = discord.ui.Button(label="Abrir Ticket", emoji=dados["painel_1"]["emoji"], style=discord.ButtonStyle.primary, custom_id=f"abrir_ticket_{numero}")
+        button = discord.ui.Button(
+            label="Abrir Ticket",
+            emoji="🎫",
+            style=discord.ButtonStyle.primary,
+            custom_id=f"abrir_ticket_{ticket_id}"
+        )
+
         view.add_item(button)
 
-        await interaction.response.send_message(embed=embed, view=view)
-    
-    @app_commands.command(name="listartickets", description="Lista os tickets criados.")
+        await interaction.response.send_message(
+            f"Painel criado com ID `{ticket_id}`",
+            embed=embed,
+            view=view
+        )
+
+    # LISTAR TICKETS
+    @app_commands.command(name="listartickets", description="Lista tickets.")
     async def listartickets(self, interaction: discord.Interaction):
-        if not os.path.exists("tickets"):
-            await interaction.response.send_message("Nenhum ticket criado ainda.", ephemeral=True)
+
+        conn = sqlite3.connect("bot.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        SELECT id, titulo
+        FROM tickets
+        WHERE guild_id=?
+        """, (interaction.guild.id,))
+
+        tickets = cursor.fetchall()
+        conn.close()
+
+        if not tickets:
+            await interaction.response.send_message("Nenhum ticket criado.", ephemeral=True)
             return
 
-        guild_id = interaction.guild.id
-        pasta = f"tickets/{guild_id}"
+        lista = "\n".join([f"ID `{t[0]}` - {t[1]}" for t in tickets])
 
-        if not os.path.exists(pasta):
-            await interaction.response.send_message("Nenhum ticket criado ainda.", ephemeral=True)
-            return
+        await interaction.response.send_message(f"**Tickets:**\n{lista}")
 
-        arquivos = os.listdir(pasta)
-        lista_tickets = []
-        for arquivo in arquivos:
-            with open(f"{pasta}/{arquivo}", "r") as f:
-                dados = json.load(f)
-                id = arquivo.split(".")[0]
-                lista_tickets.append(f"ID: `{id}` - Título: `{dados['painel_1']['titulo']}`")
-        resposta = "\n".join(lista_tickets)
-        await interaction.response.send_message(f"**Tickets Criados:**\n{resposta}")
-            
-    @app_commands.command(name="deletarticket", description="Deleta um ticket pelo ID.")
-    @app_commands.describe(id="ID do ticket a ser deletado")
+    # DELETAR CONFIGURAÇÃO
+    @app_commands.command(name="deletarticket", description="Deleta um ticket.")
     async def deletarticket(self, interaction: discord.Interaction, id: int):
-        guild_id = interaction.guild.id
-        nome_arquivo = f"tickets/{guild_id}/ticket{id}.json"
 
-        if not os.path.exists(nome_arquivo):
-            await interaction.response.send_message("Ticket não encontrado.", ephemeral=True)
-            return
+        conn = sqlite3.connect("bot.db")
+        cursor = conn.cursor()
 
-        os.remove(nome_arquivo)
-        await interaction.response.send_message(f"Ticket com ID `{id}` deletado com sucesso.")
+        cursor.execute("""
+        DELETE FROM tickets
+        WHERE id=? AND guild_id=?
+        """, (id, interaction.guild.id))
 
-    @app_commands.command(name="editarticket", description="Edita o título de um ticket.")
-    @app_commands.describe(id="ID do ticket a ser editado", novo_titulo="Novo título do ticket", nova_descricao="Nova descrição do ticket", nova_cor="Nova cor do ticket (em hexadecimal)", novo_emoji="Novo emoji do ticket", novo_canal_id="Novo ID do canal do ticket", novo_staff_id="Novo ID do staff do ticket", nova_imagem="Nova imagem do ticket")
-    
-    async def editarticket(self, interaction: discord.Interaction, id: int, novo_titulo: str = None, nova_descricao: str = None, nova_cor: int = None, novo_emoji: str = None, novo_canal_id: discord.CategoryChannel = None, novo_staff_id: discord.Role = None, nova_imagem: str = None):
-    
-        guild_id = interaction.guild.id
-        nome_arquivo = f"tickets/{guild_id}/ticket{id}.json"
+        conn.commit()
+        conn.close()
 
-        if not os.path.exists(nome_arquivo):
-            await interaction.response.send_message("Ticket não encontrado.", ephemeral=True)
-            return
+        await interaction.response.send_message(f"Ticket `{id}` deletado.")
 
-        with open(nome_arquivo, "r") as f:
-            dados = json.load(f)
-
-        if novo_titulo:
-            dados["painel_1"]["titulo"] = novo_titulo
-
-        if nova_descricao:
-            dados["painel_1"]["descricao"] = nova_descricao
-
-        if nova_cor:
-            dados["painel_1"]["cor"] = nova_cor
-
-        if novo_emoji:
-            dados["painel_1"]["emoji"] = novo_emoji
-
-        if novo_canal_id:
-            dados["painel_1"]["canal_id"] = novo_canal_id.id
-
-        if novo_staff_id:
-            dados["painel_1"]["staff_id"] = novo_staff_id.id
-
-        if nova_imagem:
-            dados["painel_1"]["imagem"] = nova_imagem
-
-        with open(nome_arquivo, "w") as f:
-            json.dump(dados, f, indent=4)
-
-        await interaction.response.send_message(f"Ticket com ID `{id}` editado com sucesso.")
-
-    @app_commands.command(name="enviarticket", description="Envia o painel de ticket para o canal.")
-    @app_commands.describe(id="ID do ticket a ser enviado")
+    # ENVIAR PAINEL
+    @app_commands.command(name="enviarticket", description="Envia painel de ticket.")
     async def enviarticket(self, interaction: discord.Interaction, id: int):
-        guild_id = interaction.guild.id
-        pasta = f"tickets/{guild_id}"
-        nome_arquivo = f"{pasta}/ticket{id}.json"
 
-        if not os.path.exists(nome_arquivo):
+        conn = sqlite3.connect("bot.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        SELECT titulo, descricao, cor, emoji
+        FROM tickets
+        WHERE id=? AND guild_id=?
+        """, (id, interaction.guild.id))
+
+        dados = cursor.fetchone()
+        conn.close()
+
+        if not dados:
             await interaction.response.send_message("Ticket não encontrado.", ephemeral=True)
             return
-
-        with open(nome_arquivo, "r") as f:
-            dados = json.load(f)
 
         embed = discord.Embed(
-            title=dados["painel_1"]["titulo"],
-            description=dados["painel_1"]["descricao"],
-            color=dados["painel_1"]["cor"]
+            title=dados[0],
+            description=dados[1],
+            color=dados[2]
         )
-        if dados["painel_1"]["imagem"]:
-            embed.set_image(url=dados["painel_1"]["imagem"])
 
         view = discord.ui.View()
-        button = discord.ui.Button(label="Abrir Ticket", emoji=dados["painel_1"]["emoji"], style=discord.ButtonStyle.primary, custom_id=f"abrir_ticket_{id}")
+
+        button = discord.ui.Button(
+            label="Abrir Ticket",
+            emoji=dados[3],
+            style=discord.ButtonStyle.primary,
+            custom_id=f"abrir_ticket_{id}"
+        )
+
         view.add_item(button)
 
         await interaction.response.send_message(embed=embed, view=view)
 
+    # EVENTO DOS BOTÕES
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
 
@@ -164,64 +147,61 @@ class Tickets(commands.Cog):
         if not custom_id:
             return
 
+        # ABRIR TICKET
         if custom_id.startswith("abrir_ticket_"):
 
-            id_ticket = custom_id.split("_")[-1]
+            ticket_id = int(custom_id.split("_")[-1])
 
-            guild_id = interaction.guild.id
-            nome_arquivo = f"tickets/{guild_id}/ticket{id_ticket}.json"
+            conn = sqlite3.connect("bot.db")
+            cursor = conn.cursor()
 
-            if not os.path.exists(nome_arquivo):
+            cursor.execute("""
+            SELECT titulo
+            FROM tickets
+            WHERE id=? AND guild_id=?
+            """, (ticket_id, interaction.guild.id))
+
+            dados = cursor.fetchone()
+            conn.close()
+
+            if not dados:
                 await interaction.response.send_message(
-                    "Configuração do ticket não encontrada.",
+                    "Configuração não encontrada.",
                     ephemeral=True
                 )
                 return
 
-            with open(nome_arquivo) as f:
-                dados = json.load(f)
+            canal = interaction.channel
 
-            categoria_id = dados["painel_1"]["canal_id"]
-            staff_id = dados["painel_1"]["staff_id"]
-
-            categoria = interaction.guild.get_channel(int(categoria_id)) if categoria_id else None
-
-            overwrites = {
-                interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
-                interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True)
-            }
-
-            if staff_id:
-                staff_role = interaction.guild.get_role(int(staff_id))
-                if staff_role:
-                    overwrites[staff_role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
-
-            canal = await interaction.guild.create_text_channel(
+            thread = await canal.create_thread(
                 name=f"ticket-{interaction.user.name}",
-                category=categoria,
-                overwrites=overwrites
+                type=discord.ChannelType.private_thread
             )
 
+            await thread.add_user(interaction.user)
+
             await interaction.response.send_message(
-                f"🎫 Ticket criado: {canal.mention}",
+                f"🎫 Ticket criado: {thread.mention}",
                 ephemeral=True
             )
 
             view = discord.ui.View()
 
-            botao_fechar = discord.ui.Button(
+            fechar = discord.ui.Button(
                 label="Fechar Ticket",
                 style=discord.ButtonStyle.danger,
                 emoji="🔒",
                 custom_id="fechar_ticket"
             )
 
-            view.add_item(botao_fechar)
+            view.add_item(fechar)
 
-            await canal.send(
+            await thread.send(
                 f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe.",
                 view=view
             )
+
+        # FECHAR TICKET
         if custom_id == "fechar_ticket":
 
             await interaction.response.send_message(

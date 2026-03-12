@@ -1,8 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import json
-import os
+import sqlite3
 
 class Comandos(commands.Cog):
     def __init__(self, bot):
@@ -12,55 +11,37 @@ class Comandos(commands.Cog):
     @app_commands.command(name="criarembed", description="Cria um embed padrão.")
     async def criarembed(self, interaction: discord.Interaction):
 
-        guild_id = interaction.guild.id
-        pasta = f"embeds/{guild_id}"
+        conn = sqlite3.connect("Aiko.db")
+        cursor = conn.cursor()
 
-        if not os.path.exists(pasta):
-            os.makedirs(pasta)
+        cursor.execute("""
+        INSERT INTO embeds (guild_id, title, description, color, image)
+        VALUES (?, ?, ?, ?, ?)
+        """, (
+            interaction.guild.id,
+            "Título do Embed",
+            "Descrição padrão",
+            0x3498db,
+            None
+        ))
 
-        arquivos = [a for a in os.listdir(pasta) if a.startswith("embed_")]
-
-        numero = max(
-            [int(a.replace("embed_", "").replace(".json", "")) for a in arquivos],
-            default=0
-        ) + 1
-
-        nome_arquivo = f"embed_{numero}.json"
-
-        dados = {
-            "title": "Título do Embed",
-            "description": "Descrição padrão",
-            "color": 0x3498db,
-            "fields": [],
-            "imagem": None
-        }
-
-        with open(f"{pasta}/{nome_arquivo}", "w") as f:
-            json.dump(dados, f, indent=4)
+        conn.commit()
+        embed_id = cursor.lastrowid
+        conn.close()
 
         embed = discord.Embed(
-            title=dados["title"],
-            description=dados["description"],
-            color=dados["color"],
+            title="Título do Embed",
+            description="Descrição padrão",
+            color=0x3498db
         )
 
-        if dados["imagem"]:
-            embed.set_image(url=dados["imagem"])
-
         await interaction.response.send_message(
-            f"Embed criado com ID `{numero}`",
+            f"Embed criado com ID `{embed_id}`",
             embed=embed
         )
 
     # 🔹 EDITAR EMBED
     @app_commands.command(name="editarembed", description="Edita um embed.")
-    @app_commands.describe(
-        id="ID do embed",
-        novo_titulo="Novo título",
-        novo_descricao="Nova descrição",
-        nova_cor="Nova cor (decimal)",
-        imagem_url="URL da imagem"
-    )
     async def editarembed(
         self,
         interaction: discord.Interaction,
@@ -71,117 +52,104 @@ class Comandos(commands.Cog):
         imagem_url: str = None
     ):
 
-        guild_id = interaction.guild.id
-        nome_arquivo = f"embeds/{guild_id}/embed_{id}.json"
+        conn = sqlite3.connect("bot.db")
+        cursor = conn.cursor()
 
-        if not os.path.exists(nome_arquivo):
+        cursor.execute("SELECT * FROM embeds WHERE id=? AND guild_id=?", (id, interaction.guild.id))
+        embed_data = cursor.fetchone()
+
+        if not embed_data:
             await interaction.response.send_message("Embed não encontrado.", ephemeral=True)
+            conn.close()
             return
 
-        with open(nome_arquivo, "r") as f:
-            dados = json.load(f)
+        title = novo_titulo
+        description = novo_descricao if novo_descricao else embed_data[3]
+        color = nova_cor if nova_cor else embed_data[4]
+        image = imagem_url if imagem_url else embed_data[5]
 
-        dados["title"] = novo_titulo
+        cursor.execute("""
+        UPDATE embeds
+        SET title=?, description=?, color=?, image=?
+        WHERE id=? AND guild_id=?
+        """, (title, description, color, image, id, interaction.guild.id))
 
-        if novo_descricao:
-            dados["description"] = novo_descricao
-
-        if nova_cor:
-            dados["color"] = nova_cor
-
-        if imagem_url:
-            dados["imagem"] = imagem_url
-
-        with open(nome_arquivo, "w") as f:
-            json.dump(dados, f, indent=4)
+        conn.commit()
+        conn.close()
 
         embed = discord.Embed(
-            title=dados["title"],
-            description=dados["description"],
-            color=dados["color"]
+            title=title,
+            description=description,
+            color=color
         )
 
-        if dados["imagem"]:
-            embed.set_image(url=dados["imagem"])
+        if image:
+            embed.set_image(url=image)
 
         await interaction.response.send_message("Embed atualizado:", embed=embed)
 
     # 🔹 LISTAR EMBEDS
-    @app_commands.command(name="listarembeds", description="Lista os embeds criados.")
+    @app_commands.command(name="listarembeds", description="Lista os embeds.")
     async def listarembeds(self, interaction: discord.Interaction):
 
-        guild_id = interaction.guild.id
-        pasta = f"embeds/{guild_id}"
+        conn = sqlite3.connect("bot.db")
+        cursor = conn.cursor()
 
-        if not os.path.exists(pasta):
-            await interaction.response.send_message("Nenhum embed criado ainda.", ephemeral=True)
+        cursor.execute("SELECT id, title FROM embeds WHERE guild_id=?", (interaction.guild.id,))
+        embeds = cursor.fetchall()
+
+        conn.close()
+
+        if not embeds:
+            await interaction.response.send_message("Nenhum embed criado.", ephemeral=True)
             return
 
-        arquivos = [a for a in os.listdir(pasta) if a.startswith("embed_")]
+        lista = "\n".join([f"ID `{e[0]}` - {e[1]}" for e in embeds])
 
-        if not arquivos:
-            await interaction.response.send_message("Nenhum embed criado ainda.", ephemeral=True)
-            return
-
-        lista_embeds = []
-
-        for arquivo in arquivos:
-            with open(f"{pasta}/{arquivo}", "r") as f:
-                dados = json.load(f)
-
-            id = arquivo.split("_")[1].split(".")[0]
-            lista_embeds.append(f"ID: `{id}` - Título: `{dados['title']}`")
-
-        resposta = "\n".join(lista_embeds)
-
-        await interaction.response.send_message(f"**Embeds Criados:**\n{resposta}")
+        await interaction.response.send_message(f"**Embeds:**\n{lista}")
 
     # 🔹 DELETAR EMBED
-    @app_commands.command(name="deletarembed", description="Deleta um embed pelo ID.")
-    @app_commands.describe(id="ID do embed a ser deletado")
+    @app_commands.command(name="deletarembed", description="Deleta um embed.")
     async def deletarembed(self, interaction: discord.Interaction, id: int):
 
-        guild_id = interaction.guild.id
-        nome_arquivo = f"embeds/{guild_id}/embed_{id}.json"
+        conn = sqlite3.connect("bot.db")
+        cursor = conn.cursor()
 
-        if not os.path.exists(nome_arquivo):
-            await interaction.response.send_message("Embed não encontrado.", ephemeral=True)
-            return
+        cursor.execute("DELETE FROM embeds WHERE id=? AND guild_id=?", (id, interaction.guild.id))
 
-        os.remove(nome_arquivo)
+        conn.commit()
+        conn.close()
 
-        await interaction.response.send_message(f"Embed com ID `{id}` deletado com sucesso.")
+        await interaction.response.send_message(f"Embed `{id}` deletado.")
 
     # 🔹 ENVIAR EMBED
-    @app_commands.command(name="enviarembed", description="Envia um embed para o canal.")
-    @app_commands.describe(id="ID do embed a ser enviado")
+    @app_commands.command(name="enviarembed", description="Envia um embed.")
     async def enviarembed(self, interaction: discord.Interaction, id: int):
 
-        guild_id = interaction.guild.id
-        nome_arquivo = f"embeds/{guild_id}/embed_{id}.json"
+        conn = sqlite3.connect("bot.db")
+        cursor = conn.cursor()
 
-        if not os.path.exists(nome_arquivo):
+        cursor.execute("""
+        SELECT title, description, color, image
+        FROM embeds
+        WHERE id=? AND guild_id=?
+        """, (id, interaction.guild.id))
+
+        resultado = cursor.fetchone()
+        conn.close()
+
+        if not resultado:
             await interaction.response.send_message("Embed não encontrado.", ephemeral=True)
             return
 
-        with open(nome_arquivo, "r") as f:
-            dados = json.load(f)
-
         embed = discord.Embed(
-            title=dados["title"],
-            description=dados["description"],
-            color=dados["color"]
+            title=resultado[0],
+            description=resultado[1],
+            color=resultado[2]
         )
 
-        if dados["imagem"]:
-            embed.set_image(url=dados["imagem"])
-
-        for field in dados["fields"]:
-            embed.add_field(
-                name=field["name"],
-                value=field["value"],
-                inline=field.get("inline", False)
-            )
+        if resultado[3]:
+            embed.set_image(url=resultado[3])
 
         await interaction.response.send_message(embed=embed)
 
