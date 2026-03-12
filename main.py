@@ -19,7 +19,6 @@ async def on_ready():
     print(f"Logado como {bot.user}")
     setup_database()
     print("banco de dados conectado")
-    await bot.tree.sync()
 
 async def main():
     async with bot:
