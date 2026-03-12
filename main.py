@@ -1,32 +1,33 @@
 import discord
 from discord.ext import commands
+import asyncio
 import os
+import dotenv
+from database import setup_database
 
-intents = discord.Intents.all()
+dotenv.load_dotenv()
+TOKEN = os.getenv("TOKEN")
 
-bot = commands.Bot(
-    command_prefix="!",
-    intents=intents
-)
+intents = discord.Intents.default()
+intents.message_content = True
+
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
     await bot.tree.sync()
     print(f"Logado como {bot.user}")
-
-async def load_cogs():
-    for root, dirs, files in os.walk("./cogs"):
-        for file in files:
-            if file.endswith(".py"):
-                path = os.path.join(root, file)
-                module = path.replace("/", ".").replace("\\", ".")[:-3]
-                print(path)
-                await bot.load_extension(module)
+    setup_database()
+    print("banco de dados conectado")
+    await bot.tree.sync()
 
 async def main():
     async with bot:
-        await load_cogs()
-        await bot.start("TOKEN")
+        await bot.load_extension("cogs.comandos")
+        await bot.load_extension("cogs.tickets")
+        await bot.load_extension("cogs.comandos_mod")
+        await bot.load_extension("cogs.Misc")
+        await bot.start(TOKEN)
 
-import asyncio
+
 asyncio.run(main())
