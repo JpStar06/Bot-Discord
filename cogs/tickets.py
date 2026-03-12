@@ -12,6 +12,7 @@ class Tickets(commands.Cog):
     # CRIAR CONFIGURAÇÃO DE TICKET
     @app_commands.command(name="criarticket", description="Cria um painel de ticket.")
     async def criarticket(self, interaction: discord.Interaction):
+        print("ticket criado com sucesso")
 
         conn = get_connection()
         cursor = conn.cursor()
@@ -58,7 +59,6 @@ class Tickets(commands.Cog):
             embed=embed,
             view=view
         )
-      print("ticket criado com sucesso")
 
     # LISTAR TICKETS
     @app_commands.command(name="listartickets", description="Lista tickets.")
