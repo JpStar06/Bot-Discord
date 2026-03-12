@@ -1,46 +1,18 @@
-import os
 import psycopg2
-from psycopg2 import pool
+import os
 
-connection_pool = None
-
-
-def init_db():
-    global connection_pool
-
-    connection_pool = psycopg2.pool.SimpleConnectionPool(
-        minconn=1,
-        maxconn=10,
-        host=os.getenv("PGHOST"),
-        database=os.getenv("PGDATABASE"),
-        user=os.getenv("PGUSER"),
-        password=os.getenv("PGPASSWORD"),
-        port=os.getenv("PGPORT")
-    )
-
-    print("✅ Pool de conexões com o PostgreSQL criado.")
-
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_connection():
-    if connection_pool is None:
-        raise Exception("Pool de conexões não inicializado.")
-    return connection_pool.getconn()
-
-
-def release_connection(conn):
-    if connection_pool:
-        connection_pool.putconn(conn)
-
-
-def close_all_connections():
-    if connection_pool:
-        connection_pool.closeall()
+    return psycopg2.connect(DATABASE_URL)
 
 
 def setup_database():
+
     conn = get_connection()
     cursor = conn.cursor()
 
+    # tabela embeds
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS embeds (
         id SERIAL PRIMARY KEY,
@@ -52,6 +24,7 @@ def setup_database():
     )
     """)
 
+    # tabela tickets
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS tickets (
         id SERIAL PRIMARY KEY,
@@ -65,9 +38,7 @@ def setup_database():
         imagem TEXT
     )
     """)
+    print("DATABASE_URL:", DATABASE_URL)
 
     conn.commit()
-    cursor.close()
-    release_connection(conn)
-
-    print("✅ Tabelas verificadas/criadas.")
+    conn.close()
