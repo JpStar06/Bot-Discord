@@ -42,9 +42,10 @@ def setup_database():
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS economy (
-        user_id INTEGER PRIMARY KEY,
-        coins INTEGER DEFAULT 0,
-        last_daily INTEGER DEFAULT 0
+        user_id BIGINT PRIMARY KEY,
+        coins BIGINT NOT NULL DEFAULT 0,
+        last_daily BIGINT NOT NULL DEFAULT 0
+);
     )
     """)
 
