@@ -48,22 +48,28 @@ class Comercio(commands.Cog):
         result = cursor.fetchone()
         conn.close()
 
+        if result is None:
+            return 0
+
         return result[0]
 
 
     @app_commands.command(name="saldo", description="Ver suas Aiko Coins")
     async def saldo(self, interaction: discord.Interaction):
 
-        user_id = interaction.user.id
+        try:
+            user_id = interaction.user.id
 
-        self.get_user(user_id)
-        coins = self.get_coins(user_id)
+            self.get_user(user_id)
+            coins = self.get_coins(user_id)
 
-        await interaction.response.send_message(
-            f"💰 Você tem **{coins} Aiko Coins**"
-        )
+            await interaction.response.send_message(
+                f"💰 Você tem **{coins} Aiko Coins**"
+            )
 
-
+        except Exception as e:
+            print("ERRO:", e)
+        
     @app_commands.command(name="aikodaily", description="Recompensa diária")
     async def daily(self, interaction: discord.Interaction):
 
@@ -78,7 +84,8 @@ class Comercio(commands.Cog):
             (user_id,)
         )
 
-        last_daily = cursor.fetchone()[0]
+        result = cursor.fetchone()
+        last_daily = result[0] if result else 0
         now = int(time.time())
 
         if now - last_daily < 86400:
