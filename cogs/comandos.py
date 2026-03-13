@@ -11,7 +11,7 @@ class Comandos(commands.Cog):
 
 
     # CRIAR EMBED
-    @app_commands.command(name="Embed-criar", description="Cria um embed padrão.")
+    @app_commands.command(name="embed-criar", description="Cria um embed padrão.")
     async def criarembed(self, interaction: discord.Interaction):
 
         conn = get_connection()
@@ -47,7 +47,7 @@ class Comandos(commands.Cog):
 
 
     # EDITAR EMBED
-    @app_commands.command(name="Embeds-editar", description="Edita um embed.")
+    @app_commands.command(name="embeds-editar", description="Edita um embed.")
     async def editarembed(
         self,
         interaction: discord.Interaction,
@@ -100,7 +100,7 @@ class Comandos(commands.Cog):
 
 
     # LISTAR EMBEDS
-    @app_commands.command(name="Embeds-list", description="Lista os embeds.")
+    @app_commands.command(name="embeds-list", description="Lista os embeds.")
     async def listarembeds(self, interaction: discord.Interaction):
 
         conn = get_connection()
@@ -124,7 +124,7 @@ class Comandos(commands.Cog):
 
 
     # DELETAR EMBED
-    @app_commands.command(name="Embeds-", description="Deleta um embed.")
+    @app_commands.command(name="embeds-", description="Deleta um embed.")
     async def deletarembed(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -142,7 +142,7 @@ class Comandos(commands.Cog):
 
 
     # ENVIAR EMBED
-    @app_commands.command(name="Embeds-enviar", description="Envia um embed.")
+    @app_commands.command(name="embeds-enviar", description="Envia um embed.")
     async def enviarembed(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -172,7 +172,7 @@ class Comandos(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="Recado-criar", description="Agenda um recado diário")
+    @app_commands.command(name="recado-criar", description="Agenda um recado diário")
     @app_commands.describe(embed_id="ID do embed", horario="Horário (HH:MM)", canal="Canal onde o recado será enviado")
     async def criar_recado(self, interaction: discord.Interaction, embed_id: int, horario: str, canal: discord.TextChannel):
 
@@ -205,7 +205,7 @@ class Comandos(commands.Cog):
             f"✅ Recado agendado para **{horario}** todos os dias."
         )
 
-    @app_commands.command(name="Recados-list", description="Lista os recados agendados")
+    @app_commands.command(name="recados-list", description="Lista os recados agendados")
     async def recados(self, interaction: discord.Interaction):
             
         conn = get_connection()
@@ -242,7 +242,7 @@ class Comandos(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="Recado-deletar", description="Deleta um recado")
+    @app_commands.command(name="recado-deletar", description="Deleta um recado")
     async def recado_deletar(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -260,7 +260,7 @@ class Comandos(commands.Cog):
             f"🗑️ Recado `{id}` deletado."
         )
 
-    @app_commands.command(name="Recado-editar", description="Edita um recado")
+    @app_commands.command(name="recado-editar", description="Edita um recado")
     async def recado_editar(
         self,
         interaction: discord.Interaction,
