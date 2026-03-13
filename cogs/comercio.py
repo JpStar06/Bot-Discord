@@ -19,7 +19,7 @@ class Comercio(commands.Cog):
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT * FROM economy WHERE user_id = ?",
+            "SELECT * FROM economy WHERE user_id = %s",
             (user_id,)
         )
 
@@ -27,7 +27,7 @@ class Comercio(commands.Cog):
 
         if not user:
             cursor.execute(
-                "INSERT INTO economy (user_id, coins, last_daily) VALUES (?,0,0)",
+                "INSERT INTO economy (user_id, coins, last_daily) VALUES (%s,0,0)",
                 (user_id,)
             )
             conn.commit()
@@ -41,7 +41,7 @@ class Comercio(commands.Cog):
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT coins FROM economy WHERE user_id = ?",
+            "SELECT coins FROM economy WHERE user_id = %s",
             (user_id,)
         )
 
@@ -84,7 +84,7 @@ class Comercio(commands.Cog):
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT last_daily FROM economy WHERE user_id = ?",
+            "SELECT last_daily FROM economy WHERE user_id = %s",
             (user_id,)
         )
 
@@ -107,8 +107,8 @@ class Comercio(commands.Cog):
         cursor.execute(
             """
             UPDATE economy
-            SET coins = coins + ?, last_daily = ?
-            WHERE user_id = ?
+            SET coins = coins + %s, last_daily = %s
+            WHERE user_id = %s
             """,
             (reward, now, user_id)
         )
