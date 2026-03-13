@@ -10,7 +10,7 @@ class Tickets(commands.Cog):
         self.bot = bot
 
     # CRIAR CONFIGURAÇÃO DE TICKET
-    @app_commands.command(name="criarticket", description="Cria um painel de ticket.")
+    @app_commands.command(name="Tickets-criar", description="Cria um painel de ticket.")
     async def criarticket(self, interaction: discord.Interaction):
 
         conn = get_connection()
@@ -60,7 +60,7 @@ class Tickets(commands.Cog):
         )
 
     # LISTAR TICKETS
-    @app_commands.command(name="listartickets", description="Lista tickets.")
+    @app_commands.command(name="Tickets-list", description="Lista tickets.")
     async def listartickets(self, interaction: discord.Interaction):
 
         conn = get_connection()
@@ -84,7 +84,7 @@ class Tickets(commands.Cog):
         await interaction.response.send_message(f"**Tickets:**\n{lista}")
 
     # DELETAR CONFIGURAÇÃO
-    @app_commands.command(name="deletarticket", description="Deleta um ticket.")
+    @app_commands.command(name="Tickets-deletar", description="Deleta um ticket.")
     async def deletarticket(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -101,7 +101,7 @@ class Tickets(commands.Cog):
         await interaction.response.send_message(f"Ticket `{id}` deletado.")
 
     # ENVIAR PAINEL
-    @app_commands.command(name="enviarticket", description="Envia painel de ticket.")
+    @app_commands.command(name="Tickets-enviar", description="Envia painel de ticket.")
     async def enviarticket(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -139,7 +139,7 @@ class Tickets(commands.Cog):
 
         await interaction.response.send_message(embed=embed, view=view)
     
-    @app_commands.command(name="editarticket", description="Edita a configuração de um ticket.")
+    @app_commands.command(name="Tickets-editar", description="Edita a configuração de um ticket.")
     @app_commands.describe(
         id="ID do ticket",
         titulo="Novo título",
