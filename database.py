@@ -46,6 +46,7 @@ def setup_database():
         last_daily BIGINT NOT NULL DEFAULT 0
     )
     """)
+    
 
     conn.commit()
     conn.close()
