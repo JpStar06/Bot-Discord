@@ -27,6 +27,7 @@ async def main():
         await bot.load_extension("cogs.comandos_mod")
         await bot.load_extension("cogs.Misc")
         await bot.load_extension("cogs.comercio")
+        await bot.load_extension("cogs.reminders")
         await bot.start(TOKEN)
 
 

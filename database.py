@@ -46,7 +46,17 @@ def setup_database():
         last_daily BIGINT NOT NULL DEFAULT 0
     )
     """)
-    
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS reminders (
+        id SERIAL PRIMARY KEY,
+        guild_id BIGINT,
+        channel_id BIGINT,
+        embed_id INTEGER,
+        horario TEXT
+    )
+    """)
+
 
     conn.commit()
     conn.close()

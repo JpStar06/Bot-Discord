@@ -2,6 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from database import get_connection
+import datetime
 
 
 class Comandos(commands.Cog):
@@ -170,6 +171,135 @@ class Comandos(commands.Cog):
             embed.set_image(url=resultado[3])
 
         await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name="criar recado", description="Agenda um recado diário")
+    @app_commands.describe(embed_id="ID do embed", horario="Horário (HH:MM)")
+    async def criar_recado(self, interaction: discord.Interaction, embed_id: int, horario: str):
+
+        try:
+            datetime.datetime.strptime(horario, "%H:%M")
+        except ValueError:
+            await interaction.response.send_message(
+                "❌ Horário inválido. Use o formato `HH:MM` (ex: 12:30).",
+                ephemeral=True
+            )
+            return
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO reminders (guild_id, channel_id, embed_id, horario) VALUES (%s,%s,%s,%s)",
+            (interaction.guild.id, interaction.channel.id, embed_id, horario)
+        )
+
+        conn.commit()
+        conn.close()
+
+        await interaction.response.send_message(
+            f"✅ Recado agendado para **{horario}** todos os dias."
+        )
+
+        @app_commands.command(name="recados", description="Lista os recados agendados")
+        async def recados(self, interaction: discord.Interaction):
+
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+            SELECT id, embed_id, horario, channel_id
+            FROM reminders
+            WHERE guild_id=%s
+            ORDER BY horario
+            """, (interaction.guild.id,))
+
+            recados = cursor.fetchall()
+            conn.close()
+
+            if not recados:
+                await interaction.response.send_message(
+                    "Nenhum recado agendado.",
+                    ephemeral=True
+                )
+                return
+
+            texto = ""
+
+            for r in recados:
+                rid, embed_id, horario, channel_id = r
+                texto += f"ID `{rid}` • Embed `{embed_id}` • {horario} • <#{channel_id}>\n"
+
+            embed = discord.Embed(
+                title="📢 Recados agendados",
+                description=texto,
+                color=0x2ecc71
+            )
+
+            await interaction.response.send_message(embed=embed)
+
+        @app_commands.command(name="recado-deletar", description="Deleta um recado")
+        async def recado_deletar(self, interaction: discord.Interaction, id: int):
+
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+            DELETE FROM reminders
+            WHERE id=%s AND guild_id=%s
+            """, (id, interaction.guild.id))
+
+            conn.commit()
+            conn.close()
+
+            await interaction.response.send_message(
+                f"🗑️ Recado `{id}` deletado."
+            )
+
+        @app_commands.command(name="recado-editar", description="Edita um recado")
+        async def recado_editar(
+            self,
+            interaction: discord.Interaction,
+            id: int,
+            novo_horario: str = None,
+            novo_embed: int = None
+        ):
+
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+            SELECT embed_id, horario
+            FROM reminders
+            WHERE id=%s AND guild_id=%s
+            """, (id, interaction.guild.id))
+
+            recado = cursor.fetchone()
+
+            if not recado:
+                await interaction.response.send_message(
+                    "Recado não encontrado.",
+                    ephemeral=True
+                )
+                conn.close()
+                return
+
+            embed_id = novo_embed if novo_embed else recado[0]
+            horario = novo_horario if novo_horario else recado[1]
+
+            cursor.execute("""
+            UPDATE reminders
+            SET embed_id=%s, horario=%s
+            WHERE id=%s AND guild_id=%s
+            """, (embed_id, horario, id, interaction.guild.id))
+
+            conn.commit()
+            conn.close()
+
+            await interaction.response.send_message(
+                f"✅ Recado `{id}` atualizado para **{horario}**."
+            )
+
+
 
 
 async def setup(bot):
