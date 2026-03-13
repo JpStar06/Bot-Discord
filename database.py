@@ -45,7 +45,6 @@ def setup_database():
         user_id BIGINT PRIMARY KEY,
         coins BIGINT NOT NULL DEFAULT 0,
         last_daily BIGINT NOT NULL DEFAULT 0
-);
     )
     """)
 
