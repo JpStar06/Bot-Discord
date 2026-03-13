@@ -57,13 +57,15 @@ class Comercio(commands.Cog):
     @app_commands.command(name="saldo", description="Ver suas Aiko Coins")
     async def saldo(self, interaction: discord.Interaction):
 
+        await interaction.response.defer()
+
         try:
             user_id = interaction.user.id
 
             self.get_user(user_id)
             coins = self.get_coins(user_id)
 
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"💰 Você tem **{coins} Aiko Coins**"
             )
 
@@ -72,6 +74,8 @@ class Comercio(commands.Cog):
         
     @app_commands.command(name="aikodaily", description="Recompensa diária")
     async def daily(self, interaction: discord.Interaction):
+
+        await interaction.response.defer()
 
         user_id = interaction.user.id
         self.get_user(user_id)
@@ -90,7 +94,7 @@ class Comercio(commands.Cog):
 
         if now - last_daily < 86400:
 
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "⏳ Você já pegou sua recompensa hoje."
             )
 
