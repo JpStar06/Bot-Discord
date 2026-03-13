@@ -173,8 +173,8 @@ class Comandos(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="criar_recado", description="Agenda um recado diário")
-    @app_commands.describe(embed_id="ID do embed", horario="Horário (HH:MM)")
-    async def criar_recado(self, interaction: discord.Interaction, embed_id: int, horario: str):
+    @app_commands.describe(embed_id="ID do embed", horario="Horário (HH:MM)", canal="Canal onde o recado será enviado")
+    async def criar_recado(self, interaction: discord.Interaction, embed_id: int, horario: str, canal: discord.TextChannel):
 
         try:
             datetime.datetime.strptime(horario, "%H:%M")
@@ -188,10 +188,15 @@ class Comandos(commands.Cog):
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute(
-            "INSERT INTO reminders (guild_id, channel_id, embed_id, horario) VALUES (%s,%s,%s,%s)",
-            (interaction.guild.id, interaction.channel.id, embed_id, horario)
-        )
+        cursor.execute("""
+        INSERT INTO reminders (guild_id, channel_id, embed_id, horario)
+        VALUES (%s, %s, %s, %s)
+        """, (
+            interaction.guild.id,
+            canal.id,
+            embed_id,
+            horario
+        ))
 
         conn.commit()
         conn.close()
