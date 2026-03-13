@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import time
+import random
 
 from database import get_connection
 
@@ -90,7 +91,7 @@ class Comercio(commands.Cog):
             return
 
 
-        reward = 100
+        reward = random.randint(100, 1000)
 
         cursor.execute(
             """
