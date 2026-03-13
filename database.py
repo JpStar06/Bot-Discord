@@ -39,7 +39,6 @@ def setup_database():
     )
     """)
     print("DATABASE_URL:", DATABASE_URL)
-
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS economy (
         user_id BIGINT PRIMARY KEY,
