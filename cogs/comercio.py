@@ -116,7 +116,7 @@ class Comercio(commands.Cog):
         conn.commit()
         conn.close()
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"🎉 Você recebeu **{reward} Aiko Coins**!"
         )
 
