@@ -299,8 +299,5 @@ class Comandos(commands.Cog):
                 f"✅ Recado `{id}` atualizado para **{horario}**."
             )
 
-
-
-
 async def setup(bot):
     await bot.add_cog(Comandos(bot))
