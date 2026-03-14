@@ -5,15 +5,12 @@ from database import get_connection
 import datetime
 
 
-class Comercio(commands.Cog):
+class Comandos(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
     embed = app_commands.Group(name="embeds", description="Comandos de embeds")
     recado = app_commands.Group(name="recado", description="Comandos de recados")
-
-    def __init__(self, bot):
-        self.bot = bot
-        self.bot.tree.add_command(self.economia)
-        self.bot.tree.add_command(self.box)
 
     # CRIAR EMBED
     @embed.command(name="criar", description="Cria um embed padrão.")
@@ -310,4 +307,4 @@ class Comercio(commands.Cog):
             )
 
 async def setup(bot):
-    await bot.add_cog(Comercio(bot))
+    await bot.add_cog(Comandos(bot))
