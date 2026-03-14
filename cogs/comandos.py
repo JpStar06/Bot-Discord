@@ -5,9 +5,11 @@ from database import get_connection
 import datetime
 
 
-class Comandos(commands.Cog):
+class Comercio(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot.tree.add_command(self.economia)
+        self.bot.tree.add_command(self.box)
 
     embed = app_commands.Group(name="embeds", description="Comandos de embeds")
     recado = app_commands.Group(name="recado", description="Comandos de recados")
@@ -307,4 +309,4 @@ class Comandos(commands.Cog):
             )
 
 async def setup(bot):
-    await bot.add_cog(Comandos(bot))
+    await bot.add_cog(Comercio(bot))
