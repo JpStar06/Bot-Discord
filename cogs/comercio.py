@@ -6,12 +6,11 @@ import datetime
 from database import get_connection
 
 
-class Economia(commands.Cog):
+class Economia(commands.GroupCog, name="eco", description="Sistema de economia"):
 
     def __init__(self, bot):
         self.bot = bot 
 
-    economia = app_commands.Group(name="eco", description="Sistema de economia")
     box = app_commands.Group(name="box", description="Sistema de lootbox")
 
     # pegar usuário
@@ -51,7 +50,7 @@ class Economia(commands.Cog):
         conn.close()
 
     # coins
-    @economia.command(name="coins", description="Ver suas coins")
+    @app_commands.command(name="coins", description="Ver suas coins")
     async def coins(self, interaction: discord.Interaction):
 
         coins, streak, last = self.get_user(interaction.user.id)
@@ -65,7 +64,7 @@ class Economia(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     # daily
-    @economia.command(name="daily", description="Pegue coins diárias")
+    @app_commands.command(name="daily", description="Pegue coins diárias")
     async def daily(self, interaction: discord.Interaction):
 
         coins, streak, last = self.get_user(interaction.user.id)
@@ -103,7 +102,7 @@ class Economia(commands.Cog):
         )
 
     # work
-    @economia.command(name="work", description="Trabalhe para ganhar coins")
+    @app_commands.command(name="work", description="Trabalhe para ganhar coins")
     async def work(self, interaction: discord.Interaction):
 
         jobs = [
@@ -125,7 +124,7 @@ class Economia(commands.Cog):
         )
 
     # ranking
-    @economia.command(name="rank", description="Ranking de coins")
+    @app_commands.command(name="rank", description="Ranking de coins")
     async def rank(self, interaction: discord.Interaction):
 
         conn = get_connection()
