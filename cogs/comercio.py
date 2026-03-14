@@ -11,7 +11,7 @@ class Economia(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    eco = app_commands.Group(name="eco", description="Sistema de economia")
+    economia = app_commands.Group(name="eco", description="Sistema de economia")
     box = app_commands.Group(name="box", description="Sistema de lootbox")
 
     # pegar usuário
@@ -51,7 +51,7 @@ class Economia(commands.Cog):
         conn.close()
 
     # coins
-    @eco.command(name="coins", description="Ver suas coins")
+    @economia.command(name="coins", description="Ver suas coins")
     async def coins(self, interaction: discord.Interaction):
 
         coins, streak, last = self.get_user(interaction.user.id)
@@ -65,10 +65,9 @@ class Economia(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     # daily
-    @eco.command(name="daily", description="Pegue coins diárias")
+    @economia.command(name="daily", description="Pegue coins diárias")
     async def daily(self, interaction: discord.Interaction):
 
-        await interaction.response.defer()
 
         coins, streak, last = self.get_user(interaction.user.id)
 
@@ -79,7 +78,7 @@ class Economia(commands.Cog):
             diff = now - last
 
             if diff.total_seconds() < 86400:
-                await interaction.followup.send(
+                await interaction.response.send_message(
                     "⏳ Você já pegou o daily hoje.",
                     ephemeral=True
                 )
@@ -100,12 +99,12 @@ class Economia(commands.Cog):
         conn.commit()
         conn.close()
 
-        await interaction.followup.send(
+        await interaction.response.send_message(
             f"🎁 Daily coletado!\n+{reward} coins\n🔥 Streak: {streak}"
         )
 
     # work
-    @eco.command(name="work", description="Trabalhe para ganhar coins")
+    @economia.command(name="work", description="Trabalhe para ganhar coins")
     async def work(self, interaction: discord.Interaction):
 
         jobs = [
@@ -127,7 +126,7 @@ class Economia(commands.Cog):
         )
 
     # ranking
-    @eco.command(name="rank", description="Ranking de coins")
+    @economia.command(name="rank", description="Ranking de coins")
     async def rank(self, interaction: discord.Interaction):
 
         conn = get_connection()
