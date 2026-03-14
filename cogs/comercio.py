@@ -8,13 +8,11 @@ from database import get_connection
 
 class Economia(commands.Cog):
 
-    economia = app_commands.Group(name="eco", description="Sistema de economia")
-    box = app_commands.Group(name="box", description="Sistema de lootbox")
-
     def __init__(self, bot):
         self.bot = bot 
-        self.bot.tree.add_command(self.economia)
-        self.bot.tree.add_command(self.box)
+
+    economia = app_commands.Group(name="eco", description="Sistema de economia")
+    box = app_commands.Group(name="box", description="Sistema de lootbox")
 
     # pegar usuário
     def get_user(self, user_id):
