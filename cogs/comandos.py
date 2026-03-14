@@ -6,13 +6,14 @@ import datetime
 
 
 class Comercio(commands.Cog):
+
+    embed = app_commands.Group(name="embeds", description="Comandos de embeds")
+    recado = app_commands.Group(name="recado", description="Comandos de recados")
+
     def __init__(self, bot):
         self.bot = bot
         self.bot.tree.add_command(self.economia)
         self.bot.tree.add_command(self.box)
-
-    embed = app_commands.Group(name="embeds", description="Comandos de embeds")
-    recado = app_commands.Group(name="recado", description="Comandos de recados")
 
     # CRIAR EMBED
     @embed.command(name="criar", description="Cria um embed padrão.")
