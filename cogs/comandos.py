@@ -175,7 +175,7 @@ class Comandos(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @recado.command(name="criar", description="Agenda um recado diário")
-    @recado.describe(embed_id="ID do embed", horario="Horário (HH:MM)", canal="Canal onde o recado será enviado")
+    @app_commands.describe(embed_id="ID do embed", horario="Horário (HH:MM)", canal="Canal onde o recado será enviado")
     async def criar_recado(self, interaction: discord.Interaction, embed_id: int, horario: str, canal: discord.TextChannel):
 
         try:
