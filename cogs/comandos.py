@@ -9,9 +9,10 @@ class Comandos(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    embed = app_commands.Group(name="embeds", description="Comandos de embeds")
 
     # CRIAR EMBED
-    @app_commands.command(name="embed-criar", description="Cria um embed padrão.")
+    @embed.command(name="criar", description="Cria um embed padrão.")
     async def criarembed(self, interaction: discord.Interaction):
 
         conn = get_connection()
@@ -47,7 +48,7 @@ class Comandos(commands.Cog):
 
 
     # EDITAR EMBED
-    @app_commands.command(name="embeds-editar", description="Edita um embed.")
+    @embed.command(name="editar", description="Edita um embed.")
     async def editarembed(
         self,
         interaction: discord.Interaction,
@@ -100,7 +101,7 @@ class Comandos(commands.Cog):
 
 
     # LISTAR EMBEDS
-    @app_commands.command(name="embeds-list", description="Lista os embeds.")
+    @embed.command(name="listar", description="Lista os embeds.")
     async def listarembeds(self, interaction: discord.Interaction):
 
         conn = get_connection()
@@ -124,7 +125,7 @@ class Comandos(commands.Cog):
 
 
     # DELETAR EMBED
-    @app_commands.command(name="embeds-", description="Deleta um embed.")
+    @embed.command(name="deletar", description="Deleta um embed.")
     async def deletarembed(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -142,7 +143,7 @@ class Comandos(commands.Cog):
 
 
     # ENVIAR EMBED
-    @app_commands.command(name="embeds-enviar", description="Envia um embed.")
+    @embed.command(name="enviar", description="Envia um embed.")
     async def enviarembed(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
