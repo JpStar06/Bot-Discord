@@ -28,6 +28,7 @@ async def main():
         await bot.load_extension("cogs.Misc")
         await bot.load_extension("cogs.comercio")
         await bot.load_extension("cogs.reminders")
+        await bot.load_extension("cogs.casino")
         await bot.start(TOKEN)
 
 
