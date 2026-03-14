@@ -68,41 +68,45 @@ class Economia(commands.Cog):
     @economia.command(name="daily", description="Pegue coins diárias")
     async def daily(self, interaction: discord.Interaction):
 
+        await interaction.response.defer()
 
         coins, streak, last = self.get_user(interaction.user.id)
 
         now = datetime.datetime.utcnow()
 
+        # verifica ultimo daily
         if last:
-            last = datetime.datetime.fromisoformat(str(last))
+            if isinstance(last, str):
+                last = datetime.datetime.fromisoformat(last)
+
             diff = now - last
 
             if diff.total_seconds() < 86400:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "⏳ Você já pegou o daily hoje.",
                     ephemeral=True
                 )
                 return
 
+        # aumenta streak
         streak += 1
-
         reward = 200 + (streak * 20)
 
         conn = get_connection()
         cursor = conn.cursor()
 
         cursor.execute(
-            "UPDATE economy SET coins=coins+%s, daily_streak=%s, last_daily=%s WHERE user_id=%s",
+            "UPDATE economy SET coins = coins + %s, daily_streak = %s, last_daily = %s WHERE user_id = %s",
             (reward, streak, now, interaction.user.id)
         )
 
         conn.commit()
         conn.close()
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"🎁 Daily coletado!\n+{reward} coins\n🔥 Streak: {streak}"
         )
-
+        
     # work
     @economia.command(name="work", description="Trabalhe para ganhar coins")
     async def work(self, interaction: discord.Interaction):
