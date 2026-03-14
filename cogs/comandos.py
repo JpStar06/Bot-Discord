@@ -10,6 +10,7 @@ class Comandos(commands.Cog):
         self.bot = bot
 
     embed = app_commands.Group(name="embeds", description="Comandos de embeds")
+    recado = app_commands.Group(name="recado", description="Comandos de recados")
 
     # CRIAR EMBED
     @embed.command(name="criar", description="Cria um embed padrão.")
@@ -173,8 +174,8 @@ class Comandos(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="recado-criar", description="Agenda um recado diário")
-    @app_commands.describe(embed_id="ID do embed", horario="Horário (HH:MM)", canal="Canal onde o recado será enviado")
+    @recado.command(name="criar", description="Agenda um recado diário")
+    @recado.describe(embed_id="ID do embed", horario="Horário (HH:MM)", canal="Canal onde o recado será enviado")
     async def criar_recado(self, interaction: discord.Interaction, embed_id: int, horario: str, canal: discord.TextChannel):
 
         try:
@@ -206,7 +207,7 @@ class Comandos(commands.Cog):
             f"✅ Recado agendado para **{horario}** todos os dias."
         )
 
-    @app_commands.command(name="recados-list", description="Lista os recados agendados")
+    recado.command(name="listar", description="Lista os recados agendados")
     async def recados(self, interaction: discord.Interaction):
             
         conn = get_connection()
@@ -243,7 +244,7 @@ class Comandos(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="recado-deletar", description="Deleta um recado")
+    @recado.command(name="deletar", description="Deleta um recado")
     async def recado_deletar(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -261,7 +262,7 @@ class Comandos(commands.Cog):
             f"🗑️ Recado `{id}` deletado."
         )
 
-    @app_commands.command(name="recado-editar", description="Edita um recado")
+    @recado.command(name="editar", description="Edita um recado")
     async def recado_editar(
         self,
         interaction: discord.Interaction,
