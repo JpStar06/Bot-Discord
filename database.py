@@ -43,7 +43,8 @@ def setup_database():
     CREATE TABLE IF NOT EXISTS economy (
         user_id BIGINT PRIMARY KEY,
         coins BIGINT NOT NULL DEFAULT 0,
-        last_daily BIGINT NOT NULL DEFAULT 0
+        last_daily BIGINT NOT NULL DEFAULT 0,
+        daily_streak BIGINT NOT NULL DEFAULT 0
     )
     """)
 
