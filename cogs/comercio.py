@@ -100,7 +100,7 @@ class Economia(commands.Cog):
         conn.commit()
         conn.close()
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"🎁 Daily coletado!\n+{reward} coins\n🔥 Streak: {streak}"
         )
 
