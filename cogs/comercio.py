@@ -12,6 +12,7 @@ class Comercio(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    economia=app_commands.Group(name="economia", description="Comandos de economia")
 
     def get_user(self, user_id):
 
@@ -54,7 +55,7 @@ class Comercio(commands.Cog):
         return result[0]
 
 
-    @app_commands.command(name="saldo", description="Ver suas Aiko Coins")
+    @economia.command(name="saldo", description="Ver suas Aiko Coins")
     async def saldo(self, interaction: discord.Interaction):
 
         await interaction.response.defer()
@@ -72,7 +73,7 @@ class Comercio(commands.Cog):
         except Exception as e:
             print("ERRO:", e)
         
-    @app_commands.command(name="aikodaily", description="Recompensa diária")
+    @economia.command(name="diário", description="Recompensa diária")
     async def daily(self, interaction: discord.Interaction):
 
         await interaction.response.defer()

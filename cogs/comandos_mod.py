@@ -7,7 +7,9 @@ class Mods(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="banir", description="Bane um usuário do servidor.")
+    adm = app_commands.Group(name="adm", description="Comandos de adm")
+
+    @adm.command(name="banir", description="Bane um usuário do servidor.")
     @app_commands.describe(user="Usuário a ser banido", reason="Motivo do banimento")
     @app_commands.default_permissions(administrator=True)
     async def banir(self, interaction: discord.Interaction, user: discord.Member, reason: str = None):
@@ -27,7 +29,7 @@ class Mods(commands.Cog):
             f"🔨 Usuário {user.mention} banido.\nMotivo: {reason or 'Sem motivo.'}"
         )
 
-    @app_commands.command(name="kickar", description="Kicka um usuário do servidor.")
+    @adm.command(name="kickar", description="Kicka um usuário do servidor.")
     @app_commands.describe(user="Usuário a ser kickado", reason="Motivo do kick")
     @app_commands.default_permissions(administrator=True)
     async def kickar(self, interaction: discord.Interaction, user: discord.Member, reason: str = None):
@@ -47,7 +49,7 @@ class Mods(commands.Cog):
             f"👢 Usuário {user.mention} kickado.\nMotivo: {reason or 'Sem motivo.'}"
         )
 
-    @app_commands.command(name="mutar", description="Muta um usuário.")
+    @adm.command(name="mutar", description="Muta um usuário.")
     @app_commands.describe(user="Usuário a ser mutado", minutos="Tempo do mute")
     @app_commands.default_permissions(administrator=True)
     async def mutar(self, interaction: discord.Interaction, user: discord.Member, minutos: int):
@@ -64,7 +66,7 @@ class Mods(commands.Cog):
             f"🔇 {user.mention} foi mutado por **{minutos} minutos**."
         )
 
-    @app_commands.command(name="desmutar", description="Remove o mute de um usuário.")
+    @adm.command(name="desmutar", description="Remove o mute de um usuário.")
     @app_commands.describe(user="Usuário a ser desmutado")
     @app_commands.default_permissions(administrator=True)
     async def desmutar(self, interaction: discord.Interaction, user: discord.Member):
