@@ -350,25 +350,38 @@ class Economia(commands.Cog):
     @economia.command(name="lojinha", description="Veja a loja diária")
     async def shop(self, interaction: discord.Interaction):
 
-        today = int(datetime.datetime.utcnow().strftime("%Y%m%d"))
+        conn = get_connection()
+        cursor = conn.cursor()
 
+        cursor.execute("""
+            SELECT item_id, nome, preco_base, emoji
+            FROM items
+        """)
+
+        items = cursor.fetchall()
+        conn.close()
+
+        if not items:
+            await interaction.response.send_message(
+                "A loja está vazia.",
+                ephemeral=True
+            )
+            return
+
+        # seed baseada no dia
+        today = int(datetime.datetime.utcnow().strftime("%Y%m%d"))
         random.seed(today)
 
-        items = [
-            ("📦 Lootbox", 500),
-            ("🎰 Ticket de cassino", 300),
-            ("💎 Gem misteriosa", 1200),
-            ("🍀 Amuleto da sorte", 800),
-            ("🎨 Cor exclusiva", 2000),
-            ("⚡ Boost de trabalho", 1000)
-        ]
-
-        shop_items = random.sample(items, 3)
+        # pega até 9 itens
+        shop_items = random.sample(items, min(9, len(items)))
 
         text = ""
 
         for i, item in enumerate(shop_items, start=1):
-            text += f"{i}. {item[0]} — `{item[1]} coins`\n"
+
+            item_id, nome, preco, emoji = item
+
+            text += f"{i}. {emoji} **{nome}** — `{preco} coins`\n"
 
         embed = discord.Embed(
             title="🛒 Loja diária",
@@ -376,7 +389,10 @@ class Economia(commands.Cog):
             color=0x3498db
         )
 
+        embed.set_footer(text="A loja muda todos os dias!")
+
         await interaction.response.send_message(embed=embed)
+
 
 async def setup(bot):
     await bot.add_cog(Economia(bot))
