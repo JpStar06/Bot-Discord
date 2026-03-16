@@ -78,21 +78,15 @@ class Economia(commands.Cog):
             else:
                 coins, streak, last = data
 
-            now = int(datetime.datetime.utcnow().isoformat())
+            now = int(datetime.datetime.utcnow().strftime("%Y%m%d"))
 
             # verifica ultimo daily
-            if last:
-                if isinstance(last, str):
-                    last = datetime.datetime.fromisoformat(last)
-
-                diff = now - last
-
-                if diff.total_seconds() < 86400:
-                    await interaction.followup.send(
-                        "⏳ Você já pegou o daily hoje.",
-                        ephemeral=True
-                    )
-                    return
+            if last == now:
+                await interaction.followup.send(
+                    "⏳ Você já pegou o daily hoje.",
+                    ephemeral=True
+                )
+                return
 
             # aumenta streak
             streak = streak or 0
