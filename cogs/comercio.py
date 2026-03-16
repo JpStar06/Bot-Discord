@@ -266,69 +266,71 @@ class Economia(commands.Cog):
         usuario: discord.Member,
         quantia: int
     ):
+        try:
+            if usuario.id == interaction.user.id:
+                await interaction.response.send_message(
+                    "❌ Você não pode pagar a si mesmo.",
+                    ephemeral=True
+                )
+                return
 
-        if usuario.id == interaction.user.id:
-            await interaction.response.send_message(
-                "❌ Você não pode pagar a si mesmo.",
-                ephemeral=True
+            if quantia <= 0:
+                await interaction.response.send_message(
+                    "❌ Quantia inválida.",
+                    ephemeral=True
+                )
+                return
+
+            coins = self.get_coins(interaction.user.id)
+
+            if quantia > coins:
+                await interaction.response.send_message(
+                    "❌ Você não tem coins suficientes.",
+                    ephemeral=True
+                )
+                return
+
+            # taxa de 5%
+            taxa = int(quantia * 0.05)
+            recebido = quantia - taxa
+
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            # remove coins do pagador
+            cursor.execute(
+                "UPDATE economy SET coins = coins - %s WHERE user_id=%s",
+                (quantia, interaction.user.id)
             )
-            return
 
-        if quantia <= 0:
-            await interaction.response.send_message(
-                "❌ Quantia inválida.",
-                ephemeral=True
+            # garante que o usuário existe
+            cursor.execute(
+                "INSERT INTO economy (user_id, coins) VALUES (%s,0) ON CONFLICT (user_id) DO NOTHING",
+                (usuario.id,)
             )
-            return
 
-        coins = self.get_coins(interaction.user.id)
-
-        if quantia > coins:
-            await interaction.response.send_message(
-                "❌ Você não tem coins suficientes.",
-                ephemeral=True
+            # adiciona coins ao destinatário
+            cursor.execute(
+                "UPDATE economy SET coins = coins + %s WHERE user_id=%s",
+                (recebido, usuario.id)
             )
-            return
 
-        # taxa de 5%
-        taxa = int(quantia * 0.05)
-        recebido = quantia - taxa
+            conn.commit()
+            conn.close()
 
-        conn = get_connection()
-        cursor = conn.cursor()
+            embed = discord.Embed(
+                title="💸 Transferência",
+                description=(
+                    f"{interaction.user.mention} enviou **{recebido} coins** para {usuario.mention}\n\n"
+                    f"💰 Valor enviado: `{quantia}`\n"
+                    f"🏦 Taxa: `{taxa}` (5%)"
+                ),
+                color=0x2ecc71
+            )
 
-        # remove coins do pagador
-        cursor.execute(
-            "UPDATE economy SET coins = coins - %s WHERE user_id=%s",
-            (quantia, interaction.user.id)
-        )
-
-        # garante que o usuário existe
-        cursor.execute(
-            "INSERT INTO economy (user_id, coins) VALUES (%s,0) ON CONFLICT (user_id) DO NOTHING",
-            (usuario.id,)
-        )
-
-        # adiciona coins ao destinatário
-        cursor.execute(
-            "UPDATE economy SET coins = coins + %s WHERE user_id=%s",
-            (recebido, usuario.id)
-        )
-
-        conn.commit()
-        conn.close()
-
-        embed = discord.Embed(
-            title="💸 Transferência",
-            description=(
-                f"{interaction.user.mention} enviou **{recebido} coins** para {usuario.mention}\n\n"
-                f"💰 Valor enviado: `{quantia}`\n"
-                f"🏦 Taxa: `{taxa}` (5%)"
-            ),
-            color=0x2ecc71
-        )
-
-        await interaction.response.send_message(embed=embed)
+            await interaction.response.send_message(embed=embed)
+        except Exception as e:
+            print(e)
 
 async def setup(bot):
     await bot.add_cog(Economia(bot))
