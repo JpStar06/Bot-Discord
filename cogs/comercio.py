@@ -234,21 +234,14 @@ class Economia(commands.Cog):
             )
             return
 
+        # remove coins
         self.add_coins(interaction.user.id, -price)
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "UPDATE economy SET boxes = boxes + 1 WHERE user_id=%s",
-            (interaction.user.id,)
-        )
-
-        conn.commit()
-        conn.close()
+        # adiciona lootbox ao inventário
+        self.add_item(interaction.user.id, "box_comum", 1)
 
         await interaction.response.send_message(
-            "📦 Você comprou uma lootbox!"
+            "📦 Você comprou **1 Lootbox comum!**"
         )
 
     # abrir box
