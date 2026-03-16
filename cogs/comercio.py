@@ -91,7 +91,7 @@ class Economia(commands.Cog):
             # aumenta streak
             streak = streak or 0
             streak += 1
-            reward = 200 + (streak * 20)
+            reward = random.randint(100, 500) + (streak * 20)
 
             conn = get_connection()
             cursor = conn.cursor()
@@ -233,15 +233,16 @@ class Economia(commands.Cog):
         conn.commit()
 
         rewards = [
-            (50, "🪙 comum"),
-            (200, "✨ raro"),
-            (500, "💎 épico"),
-            (2000, "👑 lendário")
+            (random.randint(400, 500), "🪙 comum"),
+            (random.randint(500, 700), "✨ raro"),
+            (random.randint(700, 900), "💎 épico"),
+            (random.randint(1000, 3000), "👑 lendário")
+            (self.coins * 2, "🌟 mítico")
         ]
 
         reward, rarity = random.choices(
             rewards,
-            weights=[60, 25, 10, 5]
+            weights=[60, 25, 10, 5, 1]
         )[0]
 
         cursor.execute(
