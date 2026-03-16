@@ -281,7 +281,7 @@ class Economia(commands.Cog):
                 )
                 return
 
-            coins = self.get_coins(interaction.user.id)
+            coins, _, _ = self.get_user(interaction.user.id)
 
             if quantia > coins:
                 await interaction.response.send_message(
