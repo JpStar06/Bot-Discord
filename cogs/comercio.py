@@ -70,9 +70,14 @@ class Economia(commands.Cog):
 
         await interaction.response.defer()
 
-        coins, streak, last = self.get_user(interaction.user.id)
+        data = self.get_user(interaction.user.id)
 
-        now = datetime.datetime.utcnow()
+        if not data:
+            coins, streak, last = 0, 0, None
+        else:
+            coins, streak, last = data
+
+        now = datetime.datetime.utcnow().isoformat()
 
         # verifica ultimo daily
         if last:
@@ -89,6 +94,7 @@ class Economia(commands.Cog):
                 return
 
         # aumenta streak
+        streak = streak or 0
         streak += 1
         reward = 200 + (streak * 20)
 
