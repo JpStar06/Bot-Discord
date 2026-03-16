@@ -157,7 +157,7 @@ class Casino(commands.Cog):
             )
             return
 
-        emojis = ["🍒", "🍋", "🍉", "⭐", "💎", "🔥", "⚡", "🌛", "💶", "🪙"]
+        emojis = ["🍒", "🍋", "🍉", "⭐", "💎", "💶", "🪙"]
 
         r1 = random.choice(emojis)
         r2 = random.choice(emojis)
