@@ -67,51 +67,54 @@ class Economia(commands.Cog):
     # daily
     @economia.command(name="daily", description="Pegue coins diárias")
     async def daily(self, interaction: discord.Interaction):
+        try:
 
-        await interaction.response.defer()
+            await interaction.response.defer()
 
-        data = self.get_user(interaction.user.id)
+            data = self.get_user(interaction.user.id)
 
-        if not data:
-            coins, streak, last = 0, 0, None
-        else:
-            coins, streak, last = data
+            if not data:
+                coins, streak, last = 0, 0, None
+            else:
+                coins, streak, last = data
 
-        now = datetime.datetime.utcnow().isoformat()
+            now = datetime.datetime.utcnow().isoformat()
 
-        # verifica ultimo daily
-        if last:
-            if isinstance(last, str):
-                last = datetime.datetime.fromisoformat(last)
+            # verifica ultimo daily
+            if last:
+                if isinstance(last, str):
+                    last = datetime.datetime.fromisoformat(last)
 
-            diff = now - last
+                diff = now - last
 
-            if diff.total_seconds() < 86400:
-                await interaction.followup.send(
-                    "⏳ Você já pegou o daily hoje.",
-                    ephemeral=True
-                )
-                return
+                if diff.total_seconds() < 86400:
+                    await interaction.followup.send(
+                        "⏳ Você já pegou o daily hoje.",
+                        ephemeral=True
+                    )
+                    return
 
-        # aumenta streak
-        streak = streak or 0
-        streak += 1
-        reward = 200 + (streak * 20)
+            # aumenta streak
+            streak = streak or 0
+            streak += 1
+            reward = 200 + (streak * 20)
 
-        conn = get_connection()
-        cursor = conn.cursor()
+            conn = get_connection()
+            cursor = conn.cursor()
 
-        cursor.execute(
-            "UPDATE economy SET coins = coins + %s, daily_streak = %s, last_daily = %s WHERE user_id = %s",
-            (reward, streak, now, interaction.user.id)
-        )
+            cursor.execute(
+                "UPDATE economy SET coins = coins + %s, daily_streak = %s, last_daily = %s WHERE user_id = %s",
+                (reward, streak, now, interaction.user.id)
+            )
 
-        conn.commit()
-        conn.close()
+            conn.commit()
+            conn.close()
 
-        await interaction.followup.send(
-            f"🎁 Daily coletado!\n+{reward} coins\n🔥 Streak: {streak}"
-        )
+            await interaction.followup.send(
+                f"🎁 Daily coletado!\n+{reward} coins\n🔥 Streak: {streak}"
+            )
+        except Exception as e:
+            print(e)
         
     # work
     @economia.command(name="work", description="Trabalhe para ganhar coins")
