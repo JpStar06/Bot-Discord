@@ -222,12 +222,25 @@ class Economia(commands.Cog):
                 ephemeral=True
             )
             return
+        
+        boxes = [
+            ("box_comum", "🪙 comum"),
+            ("box_raro", "✨ raro"),
+            ("box_epico", "💎 épico"),
+            ("box_lendario", "👑 lendário"),
+            ("box_mitico", "🌟 mítico")
+        ]
+
+        box_id, rarity = random.choices(
+        boxes,
+        weights=[60, 25, 10, 5, 1]
+        )[0]
 
         # remove coins
         self.add_coins(interaction.user.id, -price)
 
         # adiciona lootbox ao inventário
-        self.add_item(interaction.user.id, "box_comum", 1)
+        self.add_item(interaction.user.id, box_id, 1)
 
         await interaction.response.send_message(
             "📦 Você comprou **1 Lootbox comum!**"
