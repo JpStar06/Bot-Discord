@@ -39,6 +39,26 @@ def setup_database():
     )
     """)
     print("DATABASE_URL:", DATABASE_URL)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS economy (
+        user_id BIGINT PRIMARY KEY,
+        coins BIGINT NOT NULL DEFAULT 0,
+        last_daily BIGINT NOT NULL DEFAULT 0,
+        daily_streak BIGINT NOT NULL DEFAULT 0,
+        boxes BIGINT NOT NULL DEFAULT 0
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS reminders (
+        id SERIAL PRIMARY KEY,
+        guild_id BIGINT,
+        channel_id BIGINT,
+        embed_id INTEGER,
+        horario TEXT
+    )
+    """)
+
 
     conn.commit()
     conn.close()

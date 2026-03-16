@@ -9,8 +9,11 @@ class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    tickets = app_commands.Group(name="tickets", description="Comandos de tickets")
+
     # CRIAR CONFIGURAÇÃO DE TICKET
-    @app_commands.command(name="criarticket", description="Cria um painel de ticket.")
+    @tickets.command(name="criar", description="Cria um painel de ticket.")
+    @app_commands.checks.has_permissions(administrator=True)
     async def criarticket(self, interaction: discord.Interaction):
         print("ticket criado com sucesso")
 
@@ -61,7 +64,8 @@ class Tickets(commands.Cog):
         )
 
     # LISTAR TICKETS
-    @app_commands.command(name="listartickets", description="Lista tickets.")
+    @tickets.command(name="listar", description="Lista tickets.")
+    @app_commands.checks.has_permissions(administrator=True)
     async def listartickets(self, interaction: discord.Interaction):
 
         conn = get_connection()
@@ -85,7 +89,8 @@ class Tickets(commands.Cog):
         await interaction.response.send_message(f"**Tickets:**\n{lista}")
 
     # DELETAR CONFIGURAÇÃO
-    @app_commands.command(name="deletarticket", description="Deleta um ticket.")
+    @tickets.command(name="deletar", description="Deleta um ticket.")
+    @app_commands.checks.has_permissions(administrator=True)
     async def deletarticket(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -102,7 +107,9 @@ class Tickets(commands.Cog):
         await interaction.response.send_message(f"Ticket `{id}` deletado.")
 
     # ENVIAR PAINEL
-    @app_commands.command(name="enviarticket", description="Envia painel de ticket.")
+    @tickets.command(name="enviar", description="Envia painel de ticket.")
+    @app_commands.checks.has_permissions(administrator=True)
+
     async def enviarticket(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -140,7 +147,7 @@ class Tickets(commands.Cog):
 
         await interaction.response.send_message(embed=embed, view=view)
     
-    @app_commands.command(name="editarticket", description="Edita a configuração de um ticket.")
+    @tickets.command(name="editar", description="Edita a configuração de um ticket.")
     @app_commands.describe(
         id="ID do ticket",
         titulo="Novo título",
@@ -151,6 +158,8 @@ class Tickets(commands.Cog):
         canal="Canal onde o ticket será criado",
         staff="Cargo da equipe de suporte"
     )
+    @app_commands.checks.has_permissions(administrator=True)
+
     async def editarticket(
         self,
         interaction: discord.Interaction,
@@ -310,7 +319,12 @@ class Tickets(commands.Cog):
 
             await interaction.channel.delete()
 
+    async def cog_app_command_error(self, interaction: discord.Interaction, error):
 
+            if isinstance(error, app_commands.MissingPermissions):
+                await interaction.response.send_message(
+                 "❌ Você precisa ser **administrador** para usar esse comando. ta achando que a   vida é um murango é?? >:(",
+            )
 
 async def setup(bot):
     await bot.add_cog(Tickets(bot))

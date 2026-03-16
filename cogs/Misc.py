@@ -8,8 +8,9 @@ class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    play = app_commands.Group(name="play", description="Comandos de mini-games")
 
-    @app_commands.command(name="8ball", description="Faça uma pergunta para a bola mágica.")
+    @play.command(name="8ball", description="Faça uma pergunta para a bola mágica.")
     async def eightball(self, interaction: discord.Interaction, pergunta: str):
 
         respostas = [
@@ -33,7 +34,7 @@ class Misc(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
 
-    @app_commands.command(name="fight", description="Lute com outro usuário.")
+    @play.command(name="fight", description="Lute com outro usuário.")
     async def fight(self, interaction: discord.Interaction, usuario: discord.Member):
 
         vencedor = random.choice([interaction.user, usuario])
