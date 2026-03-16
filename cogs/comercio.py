@@ -248,58 +248,61 @@ class Economia(commands.Cog):
 
     # abrir box
     @box.command(name="abrir", description="Abrir lootbox")
-    async def open_box(self, interaction: discord.Interaction):
+    async def open_box(self, interaction: discord.Interaction, box_id: str):
 
-        conn = get_connection()
-        cursor = conn.cursor()
+        # remove box do inventário
+        ok = self.remove_item(interaction.user.id, box_id, 1)
 
-        cursor.execute(
-            "SELECT boxes, coins FROM economy WHERE user_id=%s",
-            (interaction.user.id,)
-        )
-
-        result = cursor.fetchone()
-
-        if not result or result[0] <= 0:
+        if not ok:
             await interaction.response.send_message(
-                "📦 Você não tem lootboxes.",
+                "📦 Você não tem essa lootbox.",
                 ephemeral=True
             )
             return
 
-        boxes, coins = result
+        # recompensa baseada no tipo da box
+        rewards = {
+            "box_comum": [
+                (random.randint(400, 500), "🪙 comum"),
+            ],
+            "box_raro": [
+                (random.randint(500, 700), "✨ raro"),
+            ],
+            "box_epico": [
+                (random.randint(700, 900), "💎 épico"),
+            ],
+            "box_lendario": [
+                (random.randint(1000, 3000), "👑 lendário"),
+            ],
+            "box_mitico": [
+                ("double", "🌟 mítico")
+            ]
+        }
 
-        cursor.execute(
-            "UPDATE economy SET boxes = boxes - 1 WHERE user_id=%s",
-            (interaction.user.id,)
+        if box_id not in rewards:
+            await interaction.response.send_message(
+                "❌ Essa box não existe.",
+                ephemeral=True
+            )
+            return
+
+        reward, rarity = random.choice(rewards[box_id])
+
+        coins, _, _ = self.get_user(interaction.user.id)
+
+        if reward == "double":
+            reward = coins * 2
+
+        # adiciona coins
+        self.add_coins(interaction.user.id, reward)
+
+        embed = discord.Embed(
+            title="📦 Lootbox aberta!",
+            description=f"{rarity}\nVocê ganhou **{reward} coins**",
+            color=0xf1c40f
         )
 
-        conn.commit()
-
-        rewards = [
-            (random.randint(400, 500), "🪙 comum"),
-            (random.randint(500, 700), "✨ raro"),
-            (random.randint(700, 900), "💎 épico"),
-            (random.randint(1000, 3000), "👑 lendário"),
-            (coins * 2, "🌟 mítico")
-        ]
-
-        reward, rarity = random.choices(
-            rewards,
-            weights=[60, 25, 10, 5, 1]
-        )[0]
-
-        cursor.execute(
-            "UPDATE economy SET coins = coins + %s WHERE user_id=%s",
-            (reward, interaction.user.id)
-        )
-
-        conn.commit()
-        conn.close()
-
-        await interaction.response.send_message(
-            f"📦 Lootbox aberta!\n{rarity}\nVocê ganhou **{reward} coins**"
-        )
+        await interaction.response.send_message(embed=embed)
 
     @economia.command(name="pay", description="Envie coins para outro usuário")
     async def pay(
