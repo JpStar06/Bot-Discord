@@ -50,6 +50,52 @@ class Economia(commands.Cog):
         conn.commit()
         conn.close()
 
+        def add_item(self, user_id, item_id, quantidade):
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                INSERT INTO members_inventory (user_id, item_id, quantidade)
+                VALUES (%s,%s,%s)
+                ON CONFLICT (user_id, item_id)
+                DO UPDATE SET quantidade = members_inventory.quantidade + %s
+            """, (user_id, item_id, quantidade, quantidade))
+
+            conn.commit()
+            conn.close()
+
+        def remove_item(self, user_id, item_id, quantidade):
+
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                SELECT quantidade FROM members_inventory
+                WHERE user_id=%s AND item_id=%s
+            """, (user_id, item_id))
+
+            result = cursor.fetchone()
+
+            if not result or result[0] < quantidade:
+                conn.close()
+                return False
+
+            cursor.execute("""
+                UPDATE members_inventory
+                SET quantidade = quantidade - %s
+                WHERE user_id=%s AND item_id=%s
+            """, (quantidade, user_id, item_id))
+
+            cursor.execute("""
+                DELETE FROM members_inventory
+                WHERE user_id=%s AND item_id=%s AND quantidade <= 0
+            """, (user_id, item_id))
+
+            conn.commit()
+            conn.close()
+
+            return True
+
     # coins
     @economia.command(name="coins", description="Ver suas coins")
     async def coins(self, interaction: discord.Interaction):
@@ -393,6 +439,182 @@ class Economia(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
+    @economia.command(name="inventario", description="Veja seus itens")
+    async def inventario(self, interaction: discord.Interaction):
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT item_id, quantidade
+            FROM members_inventory
+            WHERE user_id=%s
+        """, (interaction.user.id,))
+
+        items = cursor.fetchall()
+        conn.close()
+
+        if not items:
+            await interaction.response.send_message("📦 Inventário vazio.")
+            return
+
+        text = ""
+
+        for item_id, qtd in items:
+            text += f"{item_id} — {qtd}\n"
+
+        embed = discord.Embed(
+            title="🎒 Inventário",
+            description=text,
+            color=0x9b59b6
+        )
+
+        await interaction.response.send_message(embed=embed)
+
+    @economia.command(name="mercado", description="Ver itens à venda")
+    async def mercado(self, interaction: discord.Interaction):
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT listing_id, seller_id, item_id, quantidade, preco
+            FROM marketplace
+            ORDER BY listing_id
+            LIMIT 10
+        """)
+
+        listings = cursor.fetchall()
+        conn.close()
+
+        if not listings:
+            await interaction.response.send_message("🛒 Mercado vazio.")
+            return
+
+        text = ""
+
+        for l in listings:
+
+            listing_id, seller_id, item_id, qtd, preco = l
+
+            user = self.bot.get_user(seller_id)
+
+            name = user.name if user else "Desconhecido"
+
+            text += f"ID `{listing_id}` • {item_id} x{qtd} — {preco} coins (vendedor: {name})\n"
+
+        embed = discord.Embed(
+            title="🛒 Mercado de jogadores",
+            description=text,
+            color=0xe67e22
+        )
+
+        await interaction.response.send_message(embed=embed)
+
+    @economia.command(name="vender", description="Colocar item à venda")
+    async def vender(
+        self,
+        interaction: discord.Interaction,
+        item_id: str,
+        quantidade: int,
+        preco: int
+    ):
+
+        if quantidade <= 0 or preco <= 0:
+            await interaction.response.send_message("Valores inválidos.", ephemeral=True)
+            return
+
+        ok = self.remove_item(interaction.user.id, item_id, quantidade)
+
+        if not ok:
+            await interaction.response.send_message("Você não tem esse item.", ephemeral=True)
+            return
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO marketplace (seller_id, item_id, quantidade, preco)
+            VALUES (%s,%s,%s,%s)
+        """, (interaction.user.id, item_id, quantidade, preco))
+
+        conn.commit()
+        conn.close()
+
+        await interaction.response.send_message(
+            f"🛒 Item listado!\n{item_id} x{quantidade} por {preco} coins."
+        )
+
+    @economia.command(name="comprar_item", description="Comprar item do mercado")
+    async def comprar_item(
+        self,
+        interaction: discord.Interaction,
+        listing_id: int
+    ):
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT seller_id, item_id, quantidade, preco
+            FROM marketplace
+            WHERE listing_id=%s
+        """, (listing_id,))
+
+        listing = cursor.fetchone()
+
+        if not listing:
+            conn.close()
+            await interaction.response.send_message("Item não encontrado.", ephemeral=True)
+            return
+
+        seller_id, item_id, qtd, preco = listing
+
+        coins, _, _ = self.get_user(interaction.user.id)
+
+        if coins < preco:
+            conn.close()
+            await interaction.response.send_message("Coins insuficientes.", ephemeral=True)
+            return
+
+        # taxa 10%
+        taxa = int(preco * 0.10)
+        recebido = preco - taxa
+
+        try:
+
+            cursor.execute("BEGIN")
+
+            cursor.execute(
+                "UPDATE economy SET coins = coins - %s WHERE user_id=%s",
+                (preco, interaction.user.id)
+            )
+
+            cursor.execute(
+                "UPDATE economy SET coins = coins + %s WHERE user_id=%s",
+                (recebido, seller_id)
+            )
+
+            cursor.execute(
+                "DELETE FROM marketplace WHERE listing_id=%s",
+                (listing_id,)
+            )
+
+            conn.commit()
+
+        except:
+            conn.rollback()
+            conn.close()
+            await interaction.response.send_message("Erro na compra.")
+            return
+
+        conn.close()
+
+        self.add_item(interaction.user.id, item_id, qtd)
+
+        await interaction.response.send_message(
+            f"✅ Compra realizada!\nVocê recebeu **{item_id} x{qtd}**"
+        )
 
 async def setup(bot):
     await bot.add_cog(Economia(bot))

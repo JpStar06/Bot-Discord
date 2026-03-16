@@ -67,7 +67,8 @@ def setup_database():
         tipo TEXT,
         raridade TEXT,
         preco_base INTEGER,
-        emoji TEXT
+        emoji TEXT,
+        usavel BOLEAN
     )
 """)
     
@@ -76,7 +77,18 @@ def setup_database():
         user_id BIGINT,
         item_id TEXT,
         quantidade INTEGER DEFAULT 0,
-        PRIMARY KEY (user_id, item_id)
+        PRIMARY KEY (user_id, item_id
+    )
+""")
+    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS marketplace (
+        listing_id SERIAL PRIMARY KEY,
+        seller_id BIGINT,
+        item_id TEXT,
+        quantidade INTEGER,
+        preco INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
 """)
 
