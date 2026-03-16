@@ -135,11 +135,11 @@ class Casino(commands.Cog):
         resultado = f"{r1} | {r2} | {r3}\n"
 
         if r1 == r2 == r3:
-            ganho = aposta * 5
+            ganho = aposta * 10
             self.add_coins(interaction.user.id, ganho)
             resultado += f"🎉 JACKPOT! Você ganhou `{ganho}` coins!"
         elif r1 == r2 or r2 == r3 or r1 == r3:
-            ganho = aposta * 2
+            ganho = aposta * 4
             self.add_coins(interaction.user.id, ganho)
             resultado += f"✨ Você ganhou `{ganho}` coins!"
         else:
