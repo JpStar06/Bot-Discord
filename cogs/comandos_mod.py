@@ -11,7 +11,7 @@ class Mods(commands.Cog):
 
     @adm.command(name="banir", description="Bane um usuário do servidor.")
     @app_commands.describe(user="Usuário a ser banido", reason="Motivo do banimento")
-    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     async def banir(self, interaction: discord.Interaction, user: discord.Member, reason: str = None):
 
         if user.top_role >= interaction.user.top_role:
@@ -31,7 +31,7 @@ class Mods(commands.Cog):
 
     @adm.command(name="kickar", description="Kicka um usuário do servidor.")
     @app_commands.describe(user="Usuário a ser kickado", reason="Motivo do kick")
-    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     async def kickar(self, interaction: discord.Interaction, user: discord.Member, reason: str = None):
 
         if user.top_role >= interaction.user.top_role:
@@ -51,7 +51,7 @@ class Mods(commands.Cog):
 
     @adm.command(name="mutar", description="Muta um usuário.")
     @app_commands.describe(user="Usuário a ser mutado", minutos="Tempo do mute")
-    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     async def mutar(self, interaction: discord.Interaction, user: discord.Member, minutos: int):
 
         if user.top_role >= interaction.user.top_role:
@@ -68,7 +68,7 @@ class Mods(commands.Cog):
 
     @adm.command(name="desmutar", description="Remove o mute de um usuário.")
     @app_commands.describe(user="Usuário a ser desmutado")
-    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     async def desmutar(self, interaction: discord.Interaction, user: discord.Member):
 
         await user.timeout(None)
@@ -76,6 +76,13 @@ class Mods(commands.Cog):
         await interaction.response.send_message(
             f"🔊 {user.mention} foi desmutado."
         )
+
+    async def cog_app_command_error(self, interaction: discord.Interaction, error):
+
+        if isinstance(error, app_commands.MissingPermissions):
+         await interaction.response.send_message(
+                "❌ Você precisa ser **administrador** para usar esse comando. ta achando que a vida é um murango é?? >:(",
+         )
 
 
 async def setup(bot):

@@ -13,7 +13,7 @@ class Tickets(commands.Cog):
 
     # CRIAR CONFIGURAÇÃO DE TICKET
     @tickets.command(name="criar", description="Cria um painel de ticket.")
-    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     async def criarticket(self, interaction: discord.Interaction):
 
         conn = get_connection()
@@ -64,7 +64,7 @@ class Tickets(commands.Cog):
 
     # LISTAR TICKETS
     @tickets.command(name="listar", description="Lista tickets.")
-    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     async def listartickets(self, interaction: discord.Interaction):
 
         conn = get_connection()
@@ -89,8 +89,7 @@ class Tickets(commands.Cog):
 
     # DELETAR CONFIGURAÇÃO
     @tickets.command(name="deletar", description="Deleta um ticket.")
-    @app_commands.default_permissions(administrator=True)
-
+    @app_commands.checks.has_permissions(administrator=True)
     async def deletarticket(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -108,7 +107,7 @@ class Tickets(commands.Cog):
 
     # ENVIAR PAINEL
     @tickets.command(name="enviar", description="Envia painel de ticket.")
-    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
 
     async def enviarticket(self, interaction: discord.Interaction, id: int):
 
@@ -158,7 +157,7 @@ class Tickets(commands.Cog):
         canal="Canal onde o ticket será criado",
         staff="Cargo da equipe de suporte"
     )
-    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
 
     async def editarticket(
         self,
@@ -319,7 +318,12 @@ class Tickets(commands.Cog):
 
             await interaction.channel.delete()
 
+async def cog_app_command_error(self, interaction: discord.Interaction, error):
 
+        if isinstance(error, app_commands.MissingPermissions):
+         await interaction.response.send_message(
+                "❌ Você precisa ser **administrador** para usar esse comando. ta achando que a vida é um murango é?? >:(",
+         )
 
 async def setup(bot):
     await bot.add_cog(Tickets(bot))
