@@ -243,7 +243,7 @@ class Economia(commands.Cog):
         self.add_item(interaction.user.id, box_id, 1)
 
         await interaction.response.send_message(
-            "📦 Você comprou **1 Lootbox comum!**"
+            f"📦 Você comprou **1 {box_id}**"
         )
 
     # abrir box
