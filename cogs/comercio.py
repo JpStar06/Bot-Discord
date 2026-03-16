@@ -343,7 +343,7 @@ class Economia(commands.Cog):
 
             await interaction.response.send_message(
                 f"Você ja trabalhou por 8 horas.\n"
-                f"De acordo com as leis trabalhistas você só pode trabalhar por 8 horas"
+                f"De acordo com as leis trabalhistas você só pode trabalhar por 8 horas\n"
                 f"Tente novamente em **{minutos}m {segundos}s**."
             )
 
