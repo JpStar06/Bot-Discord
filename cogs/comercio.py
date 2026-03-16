@@ -50,51 +50,40 @@ class Economia(commands.Cog):
         conn.commit()
         conn.close()
 
-        def add_item(self, user_id, item_id, quantidade):
-            conn = get_connection()
-            cursor = conn.cursor()
-
-            cursor.execute("""
-                INSERT INTO members_inventory (user_id, item_id, quantidade)
-                VALUES (%s,%s,%s)
-                ON CONFLICT (user_id, item_id)
-                DO UPDATE SET quantidade = members_inventory.quantidade + %s
-            """, (user_id, item_id, quantidade, quantidade))
-
-            conn.commit()
+    def add_item(self, user_id, item_id, quantidade):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO members_inventory (user_id, item_id, quantidade)
+            VALUES (%s,%s,%s)
+            ON CONFLICT (user_id, item_id)
+            DO UPDATE SET quantidade = members_inventory.quantidade + %s
+        """, (user_id, item_id, quantidade, quantidade))
+        conn.commit()
+        conn.close()
+    def remove_item(self, user_id, item_id, quantidade):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT quantidade FROM members_inventory
+            WHERE user_id=%s AND item_id=%s
+        """, (user_id, item_id))
+        result = cursor.fetchone()
+        if not result or result[0] < quantidade:
             conn.close()
-
-        def remove_item(self, user_id, item_id, quantidade):
-
-            conn = get_connection()
-            cursor = conn.cursor()
-
-            cursor.execute("""
-                SELECT quantidade FROM members_inventory
-                WHERE user_id=%s AND item_id=%s
-            """, (user_id, item_id))
-
-            result = cursor.fetchone()
-
-            if not result or result[0] < quantidade:
-                conn.close()
-                return False
-
-            cursor.execute("""
-                UPDATE members_inventory
-                SET quantidade = quantidade - %s
-                WHERE user_id=%s AND item_id=%s
-            """, (quantidade, user_id, item_id))
-
-            cursor.execute("""
-                DELETE FROM members_inventory
-                WHERE user_id=%s AND item_id=%s AND quantidade <= 0
-            """, (user_id, item_id))
-
-            conn.commit()
-            conn.close()
-
-            return True
+            return False
+        cursor.execute("""
+            UPDATE members_inventory
+            SET quantidade = quantidade - %s
+            WHERE user_id=%s AND item_id=%s
+        """, (quantidade, user_id, item_id))
+        cursor.execute("""
+            DELETE FROM members_inventory
+            WHERE user_id=%s AND item_id=%s AND quantidade <= 0
+        """, (user_id, item_id))
+        conn.commit()
+        conn.close()
+        return True
 
     # coins
     @economia.command(name="coins", description="Ver suas coins")
