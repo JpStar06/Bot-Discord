@@ -82,13 +82,12 @@ def setup_database():
 """)
     
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS marketplace (
+    CREATE TABLE marketplace (
         listing_id SERIAL PRIMARY KEY,
         seller_id BIGINT,
         item_id TEXT,
-        quantidade INTEGER,
-        preco INTEGER,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        quantidade INT,
+        preco INT
     )
 """)
 
