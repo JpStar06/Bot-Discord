@@ -346,6 +346,37 @@ class Economia(commands.Cog):
                 f"De acordo com as leis trabalhistas você só pode trabalhar por 8 horas\n"
                 f"Tente novamente em **{minutos}m {segundos}s**."
             )
+    
+    @economia.command(name="lojinha", description="Veja a loja diária")
+    async def shop(self, interaction: discord.Interaction):
+
+        today = int(datetime.datetime.utcnow().strftime("%Y%m%d"))
+
+        random.seed(today)
+
+        items = [
+            ("📦 Lootbox", 500),
+            ("🎰 Ticket de cassino", 300),
+            ("💎 Gem misteriosa", 1200),
+            ("🍀 Amuleto da sorte", 800),
+            ("🎨 Cor exclusiva", 2000),
+            ("⚡ Boost de trabalho", 1000)
+        ]
+
+        shop_items = random.sample(items, 3)
+
+        text = ""
+
+        for i, item in enumerate(shop_items, start=1):
+            text += f"{i}. {item[0]} — `{item[1]} coins`\n"
+
+        embed = discord.Embed(
+            title="🛒 Loja diária",
+            description=text,
+            color=0x3498db
+        )
+
+        await interaction.response.send_message(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Economia(bot))
