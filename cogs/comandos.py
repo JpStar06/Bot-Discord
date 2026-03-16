@@ -14,6 +14,7 @@ class Comandos(commands.Cog):
 
     # CRIAR EMBED
     @embed.command(name="criar", description="Cria um embed padrão.")
+    @app_commands.checks.has_permissions(administrator=True)
     async def criarembed(self, interaction: discord.Interaction):
 
         conn = get_connection()
@@ -50,6 +51,7 @@ class Comandos(commands.Cog):
 
     # EDITAR EMBED
     @embed.command(name="editar", description="Edita um embed.")
+    @app_commands.checks.has_permissions(administrator=True)
     async def editarembed(
         self,
         interaction: discord.Interaction,
@@ -103,6 +105,7 @@ class Comandos(commands.Cog):
 
     # LISTAR EMBEDS
     @embed.command(name="listar", description="Lista os embeds.")
+    @app_commands.checks.has_permissions(administrator=True)
     async def listarembeds(self, interaction: discord.Interaction):
 
         conn = get_connection()
@@ -127,6 +130,7 @@ class Comandos(commands.Cog):
 
     # DELETAR EMBED
     @embed.command(name="deletar", description="Deleta um embed.")
+    @app_commands.checks.has_permissions(administrator=True)
     async def deletarembed(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -145,6 +149,7 @@ class Comandos(commands.Cog):
 
     # ENVIAR EMBED
     @embed.command(name="enviar", description="Envia um embed.")
+    @app_commands.checks.has_permissions(administrator=True)
     async def enviarembed(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -176,6 +181,7 @@ class Comandos(commands.Cog):
 
     @recado.command(name="criar", description="Agenda um recado diário")
     @app_commands.describe(embed_id="ID do embed", horario="Horário (HH:MM)", canal="Canal onde o recado será enviado")
+    @app_commands.checks.has_permissions(administrator=True)
     async def criar_recado(self, interaction: discord.Interaction, embed_id: int, horario: str, canal: discord.TextChannel):
 
         try:
@@ -208,6 +214,7 @@ class Comandos(commands.Cog):
         )
 
     recado.command(name="listar", description="Lista os recados agendados")
+    @app_commands.checks.has_permissions(administrator=True)
     async def recados(self, interaction: discord.Interaction):
             
         conn = get_connection()
@@ -245,6 +252,7 @@ class Comandos(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @recado.command(name="deletar", description="Deleta um recado")
+    @app_commands.checks.has_permissions(administrator=True)
     async def recado_deletar(self, interaction: discord.Interaction, id: int):
 
         conn = get_connection()
@@ -263,6 +271,7 @@ class Comandos(commands.Cog):
         )
 
     @recado.command(name="editar", description="Edita um recado")
+    @app_commands.checks.has_permissions(administrator=True)
     async def recado_editar(
         self,
         interaction: discord.Interaction,
@@ -304,6 +313,12 @@ class Comandos(commands.Cog):
 
         await interaction.response.send_message(
                 f"✅ Recado `{id}` atualizado para **{horario}**."
+            )
+    async def cog_app_command_error(self, interaction: discord.Interaction, error):
+
+            if isinstance(error, app_commands.MissingPermissions):
+                await interaction.response.send_message(
+                 "❌ Você precisa ser **administrador** para usar esse comando. ta achando que a   vida é um murango é?? >:(",
             )
 
 async def setup(bot):

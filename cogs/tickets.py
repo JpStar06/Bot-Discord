@@ -318,12 +318,12 @@ class Tickets(commands.Cog):
 
             await interaction.channel.delete()
 
-async def cog_app_command_error(self, interaction: discord.Interaction, error):
+    async def cog_app_command_error(self, interaction: discord.Interaction, error):
 
-        if isinstance(error, app_commands.MissingPermissions):
-         await interaction.response.send_message(
-                "❌ Você precisa ser **administrador** para usar esse comando. ta achando que a vida é um murango é?? >:(",
-         )
+            if isinstance(error, app_commands.MissingPermissions):
+                await interaction.response.send_message(
+                 "❌ Você precisa ser **administrador** para usar esse comando. ta achando que a   vida é um murango é?? >:(",
+            )
 
 async def setup(bot):
     await bot.add_cog(Tickets(bot))
