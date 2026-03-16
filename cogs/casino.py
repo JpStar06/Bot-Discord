@@ -189,8 +189,7 @@ class Casino(commands.Cog):
 
             await interaction.response.send_message(
                 f"🎰 Você atingiu o limite de **30 jogadas**.\n"
-                f"Tente novamente em **{minutos}m {segundos}s ou jogue outro jogo**.",
-                ephemeral=True
+                f"Tente novamente em **{minutos}m {segundos}s ou jogue outro jogo**."
             )
 
 
