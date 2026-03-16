@@ -51,6 +51,7 @@ class Casino(commands.Cog):
 
     # COINFLIP
     @casino.command(name="coinflip", description="Cara ou coroa")
+    @app_commands.checks.cooldown(30, 1200)
     async def coinflip(
         self,
         interaction: discord.Interaction,
@@ -85,9 +86,24 @@ class Casino(commands.Cog):
             msg = f"🪙 **{resultado}**\nVocê perdeu `{aposta}` coins."
 
         await interaction.response.send_message(msg)
+    
+    async def cog_app_command_error(self, interaction: discord.Interaction, error):
+
+        if isinstance(error, app_commands.CommandOnCooldown):
+
+            segundos = int(error.retry_after)
+            minutos = segundos // 60
+            segundos = segundos % 60
+
+            await interaction.response.send_message(
+                f"🎰 Você atingiu o limite de **30 jogadas**.\n"
+                f"Tente novamente em **{minutos}m {segundos}s ou jogue outro jogo**.",
+                ephemeral=True
+            )
 
     # DICE
     @casino.command(name="dice", description="Jogue dados")
+    @app_commands.checks.cooldown(30, 1200)
     async def dice(self, interaction: discord.Interaction, aposta: int):
 
         coins = self.get_coins(interaction.user.id)
@@ -113,8 +129,23 @@ class Casino(commands.Cog):
 
         await interaction.response.send_message(resultado)
 
+    async def cog_app_command_error(self, interaction: discord.Interaction, error):
+
+        if isinstance(error, app_commands.CommandOnCooldown):
+
+            segundos = int(error.retry_after)
+            minutos = segundos // 60
+            segundos = segundos % 60
+
+            await interaction.response.send_message(
+                f"🎰 Você atingiu o limite de **30 jogadas**.\n"
+                f"Tente novamente em **{minutos}m {segundos}s ou jogue outro jogo**.",
+                ephemeral=True
+            )
+
     # SLOTS
     @casino.command(name="slots", description="Caça-níquel")
+    @app_commands.checks.cooldown(30, 1200)
     async def slots(self, interaction: discord.Interaction, aposta: int):
 
         coins = self.get_coins(interaction.user.id)
@@ -126,7 +157,7 @@ class Casino(commands.Cog):
             )
             return
 
-        emojis = ["🍒", "🍋", "🍉", "⭐", "💎","💥", "🔥", "⚡", "🌟", "☀️", "🌛", "🍎", "💵", "💶", "🪙"]
+        emojis = ["🍒", "🍋", "🍉", "⭐", "💎", "🔥", "⚡", "🌛", "💶", "🪙"]
 
         r1 = random.choice(emojis)
         r2 = random.choice(emojis)
@@ -147,6 +178,20 @@ class Casino(commands.Cog):
             resultado += f"💀 Você perdeu `{aposta}` coins."
 
         await interaction.response.send_message(resultado)
+
+    async def cog_app_command_error(self, interaction: discord.Interaction, error):
+
+        if isinstance(error, app_commands.CommandOnCooldown):
+
+            segundos = int(error.retry_after)
+            minutos = segundos // 60
+            segundos = segundos % 60
+
+            await interaction.response.send_message(
+                f"🎰 Você atingiu o limite de **30 jogadas**.\n"
+                f"Tente novamente em **{minutos}m {segundos}s ou jogue outro jogo**.",
+                ephemeral=True
+            )
 
 
 async def setup(bot):
