@@ -135,36 +135,42 @@ class Economia(commands.Cog):
     # ranking
     @economia.command(name="rank", description="Ranking de coins")
     async def rank(self, interaction: discord.Interaction):
-        try:
 
-            conn = get_connection()
-            cursor = conn.cursor()
+        conn = get_connection()
+        cursor = conn.cursor()
 
-            cursor.execute(
-                "SELECT user_id, coins FROM economy ORDER BY coins DESC LIMIT 10"
-            )
+        cursor.execute(
+            "SELECT user_id, coins FROM economy ORDER BY coins DESC LIMIT 10"
+        )
 
-            users = cursor.fetchall()
-            conn.close()
+        users = cursor.fetchall()
+        conn.close()
 
-            text = ""
+        if not users:
+            await interaction.response.send_message("Nenhum dado no ranking.")
+            return
 
-            for i, u in enumerate(users, start=1):
+        text = ""
 
-                user = self.bot.get_user(int(u[0]))
+        for i, u in enumerate(users, start=1):
 
-                if user:
-                    text += f"{i}. {user.name} — {u[1]}\n"
+            user = self.bot.get_user(int(u[0]))
 
-            embed = discord.Embed(
-                title="🏆 Ranking",
-                description=text,
-                color=0xf1c40f
-            )
+            if not user:
+                try:
+                    user = await self.bot.fetch_user(int(u[0]))
+                except:
+                    continue
 
-            await interaction.response.send_message(embed=embed)
-        except Exception as e:
-            print(e)
+            text += f"{i}. {user.name} — {u[1]} coins\n"
+
+        embed = discord.Embed(
+            title="🏆 Ranking",
+            description=text,
+            color=0xf1c40f
+        )
+
+        await interaction.response.send_message(embed=embed)
 
     # comprar box
     @box.command(name="comprar", description="Comprar lootbox")
