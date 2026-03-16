@@ -51,7 +51,7 @@ class Casino(commands.Cog):
 
     # COINFLIP
     @casino.command(name="coinflip", description="Cara ou coroa")
-    @app_commands.checks.cooldown(15, 1200)
+    @app_commands.checks.cooldown(30, 1200)
     async def coinflip(
         self,
         interaction: discord.Interaction,
@@ -89,7 +89,7 @@ class Casino(commands.Cog):
     
     # DICE
     @casino.command(name="dice", description="Jogue dados")
-    @app_commands.checks.cooldown(15, 1200)
+    @app_commands.checks.cooldown(30, 1200)
     async def dice(self, interaction: discord.Interaction, aposta: int):
 
         coins = self.get_coins(interaction.user.id)
@@ -117,7 +117,7 @@ class Casino(commands.Cog):
 
     # SLOTS
     @casino.command(name="slots", description="Caça-níquel")
-    @app_commands.checks.cooldown(15, 1200)
+    @app_commands.checks.cooldown(30, 1200)
     async def slots(self, interaction: discord.Interaction, aposta: int):
 
         coins = self.get_coins(interaction.user.id)
