@@ -51,7 +51,7 @@ class Casino(commands.Cog):
 
     # COINFLIP
     @casino.command(name="coinflip", description="Cara ou coroa")
-    @app_commands.checks.cooldown(30, 1200)
+    @app_commands.checks.cooldown(15, 1200)
     async def coinflip(
         self,
         interaction: discord.Interaction,
@@ -87,23 +87,9 @@ class Casino(commands.Cog):
 
         await interaction.response.send_message(msg)
     
-    async def cog_app_command_error(self, interaction: discord.Interaction, error):
-
-        if isinstance(error, app_commands.CommandOnCooldown):
-
-            segundos = int(error.retry_after)
-            minutos = segundos // 60
-            segundos = segundos % 60
-
-            await interaction.response.send_message(
-                f"🎰 Você atingiu o limite de **30 jogadas**.\n"
-                f"Tente novamente em **{minutos}m {segundos}s ou jogue outro jogo**.",
-                ephemeral=True
-            )
-
     # DICE
     @casino.command(name="dice", description="Jogue dados")
-    @app_commands.checks.cooldown(30, 1200)
+    @app_commands.checks.cooldown(15, 1200)
     async def dice(self, interaction: discord.Interaction, aposta: int):
 
         coins = self.get_coins(interaction.user.id)
@@ -129,23 +115,9 @@ class Casino(commands.Cog):
 
         await interaction.response.send_message(resultado)
 
-    async def cog_app_command_error(self, interaction: discord.Interaction, error):
-
-        if isinstance(error, app_commands.CommandOnCooldown):
-
-            segundos = int(error.retry_after)
-            minutos = segundos // 60
-            segundos = segundos % 60
-
-            await interaction.response.send_message(
-                f"🎰 Você atingiu o limite de **30 jogadas**.\n"
-                f"Tente novamente em **{minutos}m {segundos}s ou jogue outro jogo**.",
-                ephemeral=True
-            )
-
     # SLOTS
     @casino.command(name="slots", description="Caça-níquel")
-    @app_commands.checks.cooldown(30, 1200)
+    @app_commands.checks.cooldown(15, 1200)
     async def slots(self, interaction: discord.Interaction, aposta: int):
 
         coins = self.get_coins(interaction.user.id)
@@ -166,11 +138,11 @@ class Casino(commands.Cog):
         resultado = f"{r1} | {r2} | {r3}\n"
 
         if r1 == r2 == r3:
-            ganho = aposta * 10
+            ganho = aposta * 5
             self.add_coins(interaction.user.id, ganho)
             resultado += f"🎉 JACKPOT! Você ganhou `{ganho}` coins!"
         elif r1 == r2 or r2 == r3 or r1 == r3:
-            ganho = aposta * 4
+            ganho = aposta * 2
             self.add_coins(interaction.user.id, ganho)
             resultado += f"✨ Você ganhou `{ganho}` coins!"
         else:
