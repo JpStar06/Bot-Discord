@@ -78,7 +78,7 @@ class Economia(commands.Cog):
             else:
                 coins, streak, last = data
 
-            now = datetime.datetime.utcnow().isoformat()
+            now = int(datetime.datetime.utcnow().isoformat())
 
             # verifica ultimo daily
             if last:
