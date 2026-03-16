@@ -212,7 +212,7 @@ class Economia(commands.Cog):
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT boxes FROM economy WHERE user_id=%s",
+            "SELECT boxes, coins FROM economy WHERE user_id=%s",
             (interaction.user.id,)
         )
 
@@ -225,6 +225,8 @@ class Economia(commands.Cog):
             )
             return
 
+        boxes, coins = result
+
         cursor.execute(
             "UPDATE economy SET boxes = boxes - 1 WHERE user_id=%s",
             (interaction.user.id,)
@@ -236,8 +238,8 @@ class Economia(commands.Cog):
             (random.randint(400, 500), "🪙 comum"),
             (random.randint(500, 700), "✨ raro"),
             (random.randint(700, 900), "💎 épico"),
-            (random.randint(1000, 3000), "👑 lendário")
-            (self.coins * 2, "🌟 mítico")
+            (random.randint(1000, 3000), "👑 lendário"),
+            (coins * 2, "🌟 mítico")
         ]
 
         reward, rarity = random.choices(
