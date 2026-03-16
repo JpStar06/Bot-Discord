@@ -112,6 +112,7 @@ class Economia(commands.Cog):
         
     # work
     @economia.command(name="work", description="Trabalhe para ganhar coins")
+    @app_commands.checks.cooldown(8, 600)
     async def work(self, interaction: discord.Interaction):
 
         jobs = [
@@ -129,7 +130,7 @@ class Economia(commands.Cog):
         self.add_coins(interaction.user.id, reward)
 
         await interaction.response.send_message(
-            f"💼 Você trabalhou como **{job}**\n+{reward} coins"
+            f"💼 Você trabalhou como **{job}** por 1 hora\ne recebeu {reward} coins"
         )
 
     # ranking
@@ -331,6 +332,20 @@ class Economia(commands.Cog):
             await interaction.response.send_message(embed=embed)
         except Exception as e:
             print(e)
+
+    async def cog_app_command_error(self, interaction: discord.Interaction, error):
+
+        if isinstance(error, app_commands.CommandOnCooldown):
+
+            segundos = int(error.retry_after)
+            minutos = segundos // 60
+            segundos = segundos % 60
+
+            await interaction.response.send_message(
+                f"Você ja trabalhou por 8 horas.\n"
+                f"De acordo com as leis trabalhistas você só pode trabalhar por 8 horas"
+                f"Tente novamente em **{minutos}m {segundos}s**."
+            )
 
 async def setup(bot):
     await bot.add_cog(Economia(bot))
