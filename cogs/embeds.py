@@ -12,30 +12,42 @@ class Comandos(commands.Cog):
     embed = app_commands.Group(name="embeds", description="Comandos de embeds")
     recado = app_commands.Group(name="recado", description="Comandos de recados")
 
-    # CRIAR EMBED
+    # ========================
+    # UTIL
+    # ========================
+    def db_execute(self, query, params=(), fetchone=False, fetchall=False):
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+
+                if fetchone:
+                    return cursor.fetchone()
+                if fetchall:
+                    return cursor.fetchall()
+
+                conn.commit()
+
+    # ========================
+    # EMBEDS
+    # ========================
+
     @embed.command(name="criar", description="Cria um embed padrão.")
     @app_commands.checks.has_permissions(administrator=True)
     async def criarembed(self, interaction: discord.Interaction):
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-        INSERT INTO embeds (guild_id, title, description, color, image)
-        VALUES (%s, %s, %s, %s, %s)
-        RETURNING id
+        result = self.db_execute("""
+            INSERT INTO embeds (guild_id, title, description, color, image)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id
         """, (
             interaction.guild.id,
             "Título do Embed",
             "Descrição padrão",
             0x3498db,
             None
-        ))
+        ), fetchone=True)
 
-        embed_id = cursor.fetchone()[0]
-
-        conn.commit()
-        conn.close()
+        embed_id = result[0]
 
         embed = discord.Embed(
             title="Título do Embed",
@@ -44,12 +56,10 @@ class Comandos(commands.Cog):
         )
 
         await interaction.response.send_message(
-            f"Embed criado com ID `{embed_id}`",
+            f"✅ Embed criado com ID `{embed_id}`",
             embed=embed
         )
 
-
-    # EDITAR EMBED
     @embed.command(name="editar", description="Edita um embed.")
     @app_commands.checks.has_permissions(administrator=True)
     async def editarembed(
@@ -62,62 +72,43 @@ class Comandos(commands.Cog):
         imagem_url: str = None
     ):
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
+        data = self.db_execute(
             "SELECT title, description, color, image FROM embeds WHERE id=%s AND guild_id=%s",
-            (id, interaction.guild.id)
+            (id, interaction.guild.id),
+            fetchone=True
         )
 
-        embed_data = cursor.fetchone()
-
-        if not embed_data:
-            await interaction.response.send_message("Embed não encontrado.", ephemeral=True)
-            conn.close()
+        if not data:
+            await interaction.response.send_message("❌ Embed não encontrado.", ephemeral=True)
             return
 
         title = novo_titulo
-        description = novo_descricao if novo_descricao else embed_data[1]
-        color = nova_cor if nova_cor else embed_data[2]
-        image = imagem_url if imagem_url else embed_data[3]
+        description = novo_descricao or data[1]
+        color = nova_cor or data[2]
+        image = imagem_url or data[3]
 
-        cursor.execute("""
-        UPDATE embeds
-        SET title=%s, description=%s, color=%s, image=%s
-        WHERE id=%s AND guild_id=%s
+        self.db_execute("""
+            UPDATE embeds
+            SET title=%s, description=%s, color=%s, image=%s
+            WHERE id=%s AND guild_id=%s
         """, (title, description, color, image, id, interaction.guild.id))
 
-        conn.commit()
-        conn.close()
-
-        embed = discord.Embed(
-            title=title,
-            description=description,
-            color=color
-        )
+        embed = discord.Embed(title=title, description=description, color=color)
 
         if image:
             embed.set_image(url=image)
 
-        await interaction.response.send_message("Embed atualizado:", embed=embed)
+        await interaction.response.send_message("✅ Embed atualizado:", embed=embed)
 
-
-    # LISTAR EMBEDS
     @embed.command(name="listar", description="Lista os embeds.")
     @app_commands.checks.has_permissions(administrator=True)
     async def listarembeds(self, interaction: discord.Interaction):
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
+        embeds = self.db_execute(
             "SELECT id, title FROM embeds WHERE guild_id=%s",
-            (interaction.guild.id,)
+            (interaction.guild.id,),
+            fetchall=True
         )
-
-        embeds = cursor.fetchall()
-        conn.close()
 
         if not embeds:
             await interaction.response.send_message("Nenhum embed criado.", ephemeral=True)
@@ -125,62 +116,49 @@ class Comandos(commands.Cog):
 
         lista = "\n".join([f"ID `{e[0]}` - {e[1]}" for e in embeds])
 
-        await interaction.response.send_message(f"**Embeds:**\n{lista}")
+        await interaction.response.send_message(f"📄 **Embeds:**\n{lista}")
 
-
-    # DELETAR EMBED
     @embed.command(name="deletar", description="Deleta um embed.")
     @app_commands.checks.has_permissions(administrator=True)
     async def deletarembed(self, interaction: discord.Interaction, id: int):
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
+        self.db_execute(
             "DELETE FROM embeds WHERE id=%s AND guild_id=%s",
             (id, interaction.guild.id)
         )
 
-        conn.commit()
-        conn.close()
+        await interaction.response.send_message(f"🗑️ Embed `{id}` deletado.")
 
-        await interaction.response.send_message(f"Embed `{id}` deletado.")
-
-
-    # ENVIAR EMBED
     @embed.command(name="enviar", description="Envia um embed.")
     @app_commands.checks.has_permissions(administrator=True)
     async def enviarembed(self, interaction: discord.Interaction, id: int):
 
-        conn = get_connection()
-        cursor = conn.cursor()
+        result = self.db_execute("""
+            SELECT title, description, color, image
+            FROM embeds
+            WHERE id=%s AND guild_id=%s
+        """, (id, interaction.guild.id), fetchone=True)
 
-        cursor.execute("""
-        SELECT title, description, color, image
-        FROM embeds
-        WHERE id=%s AND guild_id=%s
-        """, (id, interaction.guild.id))
-
-        resultado = cursor.fetchone()
-        conn.close()
-
-        if not resultado:
-            await interaction.response.send_message("Embed não encontrado.", ephemeral=True)
+        if not result:
+            await interaction.response.send_message("❌ Embed não encontrado.", ephemeral=True)
             return
 
         embed = discord.Embed(
-            title=resultado[0],
-            description=resultado[1],
-            color=resultado[2]
+            title=result[0],
+            description=result[1],
+            color=result[2]
         )
 
-        if resultado[3]:
-            embed.set_image(url=resultado[3])
+        if result[3]:
+            embed.set_image(url=result[3])
 
         await interaction.response.send_message(embed=embed)
 
+    # ========================
+    # RECADOS
+    # ========================
+
     @recado.command(name="criar", description="Agenda um recado diário")
-    @app_commands.describe(embed_id="ID do embed", horario="Horário (HH:MM)", canal="Canal onde o recado será enviado")
     @app_commands.checks.has_permissions(administrator=True)
     async def criar_recado(self, interaction: discord.Interaction, embed_id: int, horario: str, canal: discord.TextChannel):
 
@@ -188,17 +166,14 @@ class Comandos(commands.Cog):
             datetime.datetime.strptime(horario, "%H:%M")
         except ValueError:
             await interaction.response.send_message(
-                "❌ Horário inválido. Use o formato `HH:MM` (ex: 12:30).",
+                "❌ Use formato HH:MM (ex: 12:30)",
                 ephemeral=True
             )
             return
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-        INSERT INTO reminders (guild_id, channel_id, embed_id, horario)
-        VALUES (%s, %s, %s, %s)
+        self.db_execute("""
+            INSERT INTO reminders (guild_id, channel_id, embed_id, horario)
+            VALUES (%s, %s, %s, %s)
         """, (
             interaction.guild.id,
             canal.id,
@@ -206,45 +181,32 @@ class Comandos(commands.Cog):
             horario
         ))
 
-        conn.commit()
-        conn.close()
-
         await interaction.response.send_message(
-            f"✅ Recado agendado para **{horario}** todos os dias."
+            f"✅ Recado agendado para **{horario}**"
         )
 
-    recado.command(name="listar", description="Lista os recados agendados")
+    @recado.command(name="listar", description="Lista os recados")
     @app_commands.checks.has_permissions(administrator=True)
     async def recados(self, interaction: discord.Interaction):
-            
-        conn = get_connection()
-        cursor = conn.cursor()
 
-        cursor.execute("""
-        SELECT id, embed_id, horario, channel_id
-        FROM reminders
-        WHERE guild_id=%s
-        ORDER BY horario
-        """, (interaction.guild.id,))
-
-        recados = cursor.fetchall()
-        conn.close()
+        recados = self.db_execute("""
+            SELECT id, embed_id, horario, channel_id
+            FROM reminders
+            WHERE guild_id=%s
+            ORDER BY horario
+        """, (interaction.guild.id,), fetchall=True)
 
         if not recados:
-            await interaction.response.send_message(
-                "Nenhum recado agendado.",
-                ephemeral=True
-            )
+            await interaction.response.send_message("Nenhum recado.", ephemeral=True)
             return
 
-        texto = ""
-
-        for r in recados:
-            rid, embed_id, horario, channel_id = r
-            texto += f"ID `{rid}` • Embed `{embed_id}` • {horario} • <#{channel_id}>\n"
+        texto = "\n".join([
+            f"ID `{r[0]}` • Embed `{r[1]}` • {r[2]} • <#{r[3]}>"
+            for r in recados
+        ])
 
         embed = discord.Embed(
-            title="📢 Recados agendados",
+            title="📢 Recados",
             description=texto,
             color=0x2ecc71
         )
@@ -255,71 +217,51 @@ class Comandos(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def recado_deletar(self, interaction: discord.Interaction, id: int):
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-        DELETE FROM reminders
-        WHERE id=%s AND guild_id=%s
-        """, (id, interaction.guild.id))
-
-        conn.commit()
-        conn.close()
-
-        await interaction.response.send_message(
-            f"🗑️ Recado `{id}` deletado."
+        self.db_execute(
+            "DELETE FROM reminders WHERE id=%s AND guild_id=%s",
+            (id, interaction.guild.id)
         )
+
+        await interaction.response.send_message(f"🗑️ Recado `{id}` deletado.")
 
     @recado.command(name="editar", description="Edita um recado")
     @app_commands.checks.has_permissions(administrator=True)
-    async def recado_editar(
-        self,
-        interaction: discord.Interaction,
-        id: int,
-        novo_horario: str = None,
-        novo_embed: int = None
-    ):
+    async def recado_editar(self, interaction: discord.Interaction, id: int, novo_horario: str = None, novo_embed: int = None):
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-        SELECT embed_id, horario
-        FROM reminders
-        WHERE id=%s AND guild_id=%s
-        """, (id, interaction.guild.id))
-
-        recado = cursor.fetchone()
+        recado = self.db_execute("""
+            SELECT embed_id, horario
+            FROM reminders
+            WHERE id=%s AND guild_id=%s
+        """, (id, interaction.guild.id), fetchone=True)
 
         if not recado:
-            await interaction.response.send_message(
-                "Recado não encontrado.",
-                ephemeral=True
-            )
-            conn.close()
+            await interaction.response.send_message("❌ Recado não encontrado.", ephemeral=True)
             return
 
-        embed_id = novo_embed if novo_embed else recado[0]
-        horario = novo_horario if novo_horario else recado[1]
+        embed_id = novo_embed or recado[0]
+        horario = novo_horario or recado[1]
 
-        cursor.execute("""
-        UPDATE reminders
-        SET embed_id=%s, horario=%s
-        WHERE id=%s AND guild_id=%s
+        self.db_execute("""
+            UPDATE reminders
+            SET embed_id=%s, horario=%s
+            WHERE id=%s AND guild_id=%s
         """, (embed_id, horario, id, interaction.guild.id))
 
-        conn.commit()
-        conn.close()
-
         await interaction.response.send_message(
-                f"✅ Recado `{id}` atualizado para **{horario}**."
-            )
+            f"✅ Recado `{id}` atualizado para **{horario}**"
+        )
+
+    # ========================
+    # ERROS
+    # ========================
     async def cog_app_command_error(self, interaction: discord.Interaction, error):
 
-            if isinstance(error, app_commands.MissingPermissions):
-                await interaction.response.send_message(
-                 "❌ Você precisa ser **administrador** para usar esse comando. ta achando que a   vida é um murango é?? >:(",
+        if isinstance(error, app_commands.MissingPermissions):
+            await interaction.response.send_message(
+                "❌ Você precisa ser **admin** pra usar isso 😡",
+                ephemeral=True
             )
+
 
 async def setup(bot):
     await bot.add_cog(Comandos(bot))
