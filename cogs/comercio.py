@@ -14,42 +14,43 @@ class Economia(commands.Cog):
     economia = app_commands.Group(name="eco", description="Sistema de economia")
     box = app_commands.Group(name="box", description="Sistema de lootbox")
 
-    # pegar usuário
-    def get_user(self, user_id):
-        conn = get_connection()
-        cursor = conn.cursor()
+    # ================= USUÁRIO =================
 
-        cursor.execute(
-            "SELECT coins, daily_streak, last_daily FROM economy WHERE user_id=%s",
-            (user_id,)
-        )
+    async def get_user(self, user_id):
+        pool = await get_connection()
 
-        result = cursor.fetchone()
-
-        if not result:
-            cursor.execute(
-                "INSERT INTO economy (user_id, coins, daily_streak) VALUES (%s,%s,%s)",
-                (user_id, 0, 0)
+        async with pool.acquire() as conn:
+            result = await conn.fetchrow(
+                "SELECT coins, daily_streak, last_daily, boxes FROM economy WHERE user_id=$1",
+                user_id
             )
-            conn.commit()
-            conn.close()
-            return (0, 0, None)
 
-        conn.close()
-        return result
+            if not result:
+                await conn.execute(
+                    "INSERT INTO economy (user_id, coins, daily_streak, boxes) VALUES ($1,$2,$3,$4)",
+                    user_id, 0, 0, 0
+                )
+                return (0, 0, None, 0)
 
-    def add_coins(self, user_id, amount):
-        conn = get_connection()
-        cursor = conn.cursor()
+            return (
+                result["coins"],
+                result["daily_streak"],
+                result["last_daily"],
+                result["boxes"]
+            )
 
-        cursor.execute(
-            "UPDATE economy SET coins = coins + %s WHERE user_id=%s",
-            (amount, user_id)
-        )
+    async def add_coins(self, user_id, amount):
+        pool = await get_connection()
 
-        conn.commit()
-        conn.close()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE economy SET coins = coins + $1 WHERE user_id=$2",
+                amount, user_id
+            )
 
+    # ================= COMANDOS =================
+
+<<<<<<< Updated upstream
     def add_item(self, user_id, item_id, quantidade):
         conn = get_connection()
         cursor = conn.cursor()
@@ -86,10 +87,12 @@ class Economia(commands.Cog):
         return True
 
     # coins
+=======
+>>>>>>> Stashed changes
     @economia.command(name="coins", description="Ver suas coins")
     async def coins(self, interaction: discord.Interaction):
 
-        coins, streak, last = self.get_user(interaction.user.id)
+        coins, streak, last, _ = await self.get_user(interaction.user.id)
 
         embed = discord.Embed(
             title="💰 Carteira",
@@ -99,88 +102,59 @@ class Economia(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-    # daily
     @economia.command(name="daily", description="Pegue coins diárias")
     async def daily(self, interaction: discord.Interaction):
-        try:
 
-            await interaction.response.defer()
+        await interaction.response.defer()
 
-            data = self.get_user(interaction.user.id)
+        coins, streak, last, _ = await self.get_user(interaction.user.id)
 
-            if not data:
-                coins, streak, last = 0, 0, None
-            else:
-                coins, streak, last = data
+        now = int(datetime.datetime.utcnow().strftime("%Y%m%d"))
 
-            now = int(datetime.datetime.utcnow().strftime("%Y%m%d"))
-
-            # verifica ultimo daily
-            if last == now:
-                await interaction.followup.send(
-                    "⏳ Você já pegou o daily hoje.",
-                    ephemeral=True
-                )
-                return
-
-            # aumenta streak
-            streak = streak or 0
-            streak += 1
-            reward = random.randint(100, 500) + (streak * 20)
-
-            conn = get_connection()
-            cursor = conn.cursor()
-
-            cursor.execute(
-                "UPDATE economy SET coins = coins + %s, daily_streak = %s, last_daily = %s WHERE user_id = %s",
-                (reward, streak, now, interaction.user.id)
-            )
-
-            conn.commit()
-            conn.close()
-
+        if last == now:
             await interaction.followup.send(
-                f"🎁 Daily coletado!\n+{reward} coins\n🔥 Streak: {streak}"
+                "⏳ Você já pegou o daily hoje.",
+                ephemeral=True
             )
-        except Exception as e:
-            print(e)
-        
-    # work
+            return
+
+        streak = (streak or 0) + 1
+        reward = random.randint(100, 500) + (streak * 20)
+
+        pool = await get_connection()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE economy SET coins = coins + $1, daily_streak = $2, last_daily = $3 WHERE user_id = $4",
+                reward, streak, now, interaction.user.id
+            )
+
+        await interaction.followup.send(
+            f"🎁 Daily coletado!\n+{reward} coins\n🔥 Streak: {streak}"
+        )
+
     @economia.command(name="work", description="Trabalhe para ganhar coins")
     @app_commands.checks.cooldown(8, 600)
     async def work(self, interaction: discord.Interaction):
 
-        jobs = [
-            "programador",
-            "minerador",
-            "chef",
-            "hacker",
-            "músico"
-        ]
+        jobs = ["programador", "minerador", "chef", "hacker", "músico"]
 
         job = random.choice(jobs)
-
         reward = random.randint(100, 400)
 
-        self.add_coins(interaction.user.id, reward)
+        await self.add_coins(interaction.user.id, reward)
 
         await interaction.response.send_message(
-            f"💼 Você trabalhou como **{job}** por 1 hora\ne recebeu {reward} coins"
+            f"💼 Você trabalhou como **{job}** e ganhou {reward} coins"
         )
 
-    # ranking
     @economia.command(name="rank", description="Ranking de coins")
     async def rank(self, interaction: discord.Interaction):
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "SELECT user_id, coins FROM economy ORDER BY coins DESC LIMIT 10"
-        )
-
-        users = cursor.fetchall()
-        conn.close()
+        pool = await get_connection()
+        async with pool.acquire() as conn:
+            users = await conn.fetch(
+                "SELECT user_id, coins FROM economy ORDER BY coins DESC LIMIT 10"
+            )
 
         if not users:
             await interaction.response.send_message("Nenhum dado no ranking.")
@@ -189,16 +163,15 @@ class Economia(commands.Cog):
         text = ""
 
         for i, u in enumerate(users, start=1):
-
-            user = self.bot.get_user(int(u[0]))
+            user = self.bot.get_user(int(u["user_id"]))
 
             if not user:
                 try:
-                    user = await self.bot.fetch_user(int(u[0]))
+                    user = await self.bot.fetch_user(int(u["user_id"]))
                 except:
                     continue
 
-            text += f"{i}. {user.name} — {u[1]} coins\n"
+            text += f"{i}. {user.name} — {u['coins']} coins\n"
 
         embed = discord.Embed(
             title="🏆 Ranking",
@@ -208,13 +181,13 @@ class Economia(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-    # comprar box
+    # ================= LOOTBOX =================
+
     @box.command(name="comprar", description="Comprar lootbox")
     async def buy_box(self, interaction: discord.Interaction):
 
         price = 500
-
-        coins, _, _ = self.get_user(interaction.user.id)
+        coins, _, _, boxes = await self.get_user(interaction.user.id)
 
         if coins < price:
             await interaction.response.send_message(
@@ -231,6 +204,7 @@ class Economia(commands.Cog):
             ("box_mitico", "🌟 mítico")
         ]
 
+<<<<<<< Updated upstream
         box_id, rarity = random.choices(
         boxes,
         weights=[60, 25, 10, 5, 1]
@@ -247,19 +221,37 @@ class Economia(commands.Cog):
         )
 
     # abrir box
+=======
+        pool = await get_connection()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE economy SET coins = coins - $1, boxes = boxes + 1 WHERE user_id=$2",
+                price, interaction.user.id
+            )
+
+        await interaction.response.send_message("📦 Você comprou uma lootbox!")
+
+>>>>>>> Stashed changes
     @box.command(name="abrir", description="Abrir lootbox")
     async def open_box(self, interaction: discord.Interaction, box_id: str):
 
+<<<<<<< Updated upstream
         # remove box do inventário
         ok = self.remove_item(interaction.user.id, box_id, 1)
 
         if not ok:
+=======
+        coins, _, _, boxes = await self.get_user(interaction.user.id)
+
+        if boxes <= 0:
+>>>>>>> Stashed changes
             await interaction.response.send_message(
                 "📦 Você não tem essa lootbox.",
                 ephemeral=True
             )
             return
 
+<<<<<<< Updated upstream
         # recompensa baseada no tipo da box
         rewards = {
             "box_comum": [
@@ -303,79 +295,115 @@ class Economia(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
+=======
+        rewards = [
+            (random.randint(400, 500), "🪙 comum"),
+            (random.randint(500, 700), "✨ raro"),
+            (random.randint(700, 900), "💎 épico"),
+            (random.randint(1000, 3000), "👑 lendário"),
+            (coins * 2, "🌟 mítico")
+        ]
 
-    @economia.command(name="pay", description="Envie coins para outro usuário")
-    async def pay(
-        self,
-        interaction: discord.Interaction,
-        usuario: discord.Member,
-        quantia: int
-    ):
-        try:
-            if usuario.id == interaction.user.id:
-                await interaction.response.send_message(
-                    "❌ Você não pode pagar a si mesmo.",
-                    ephemeral=True
-                )
-                return
+        reward, rarity = random.choices(
+            rewards,
+            weights=[60, 25, 10, 5, 1]
+        )[0]
 
-            if quantia <= 0:
-                await interaction.response.send_message(
-                    "❌ Quantia inválida.",
-                    ephemeral=True
-                )
-                return
-
-            coins, _, _ = self.get_user(interaction.user.id)
-
-            if quantia > coins:
-                await interaction.response.send_message(
-                    "❌ Você não tem coins suficientes.",
-                    ephemeral=True
-                )
-                return
-
-            # taxa de 5%
-            taxa = int(quantia * 0.05)
-            recebido = quantia - taxa
-
-            conn = get_connection()
-            cursor = conn.cursor()
-
-            # remove coins do pagador
-            cursor.execute(
-                "UPDATE economy SET coins = coins - %s WHERE user_id=%s",
-                (quantia, interaction.user.id)
+        pool = await get_connection()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE economy SET boxes = boxes - 1, coins = coins + $1 WHERE user_id=$2",
+                reward, interaction.user.id
             )
 
-            # garante que o usuário existe
-            cursor.execute(
-                "INSERT INTO economy (user_id, coins) VALUES (%s,0) ON CONFLICT (user_id) DO NOTHING",
-                (usuario.id,)
+        await interaction.response.send_message(
+            f"📦 Lootbox aberta!\n{rarity}\nVocê ganhou **{reward} coins**"
+        )
+>>>>>>> Stashed changes
+
+    # ================= TRANSFERÊNCIA =================
+
+    @economia.command(name="pay", description="Enviar coins")
+    async def pay(self, interaction: discord.Interaction, usuario: discord.Member, quantia: int):
+
+        if usuario.id == interaction.user.id:
+            await interaction.response.send_message("❌ Você não pode pagar a si mesmo.", ephemeral=True)
+            return
+
+        if quantia <= 0:
+            await interaction.response.send_message("❌ Quantia inválida.", ephemeral=True)
+            return
+
+        coins, _, _, _ = await self.get_user(interaction.user.id)
+
+        if quantia > coins:
+            await interaction.response.send_message("❌ Coins insuficientes.", ephemeral=True)
+            return
+
+        taxa = int(quantia * 0.05)
+        recebido = quantia - taxa
+
+        pool = await get_connection()
+        async with pool.acquire() as conn:
+
+            await conn.execute(
+                "UPDATE economy SET coins = coins - $1 WHERE user_id=$2",
+                quantia, interaction.user.id
             )
 
-            # adiciona coins ao destinatário
-            cursor.execute(
-                "UPDATE economy SET coins = coins + %s WHERE user_id=%s",
-                (recebido, usuario.id)
+            await conn.execute(
+                "INSERT INTO economy (user_id, coins) VALUES ($1,0) ON CONFLICT (user_id) DO NOTHING",
+                usuario.id
             )
 
-            conn.commit()
-            conn.close()
-
-            embed = discord.Embed(
-                title="💸 Transferência",
-                description=(
-                    f"{interaction.user.mention} enviou **{recebido} coins** para {usuario.mention}\n\n"
-                    f"💰 Valor enviado: `{quantia}`\n"
-                    f"🏦 Taxa: `{taxa}` (5%)"
-                ),
-                color=0x2ecc71
+            await conn.execute(
+                "UPDATE economy SET coins = coins + $1 WHERE user_id=$2",
+                recebido, usuario.id
             )
 
-            await interaction.response.send_message(embed=embed)
-        except Exception as e:
-            print(e)
+        embed = discord.Embed(
+            title="💸 Transferência",
+            description=(
+                f"{interaction.user.mention} enviou **{recebido} coins** para {usuario.mention}\n\n"
+                f"💰 Valor: `{quantia}`\n🏦 Taxa: `{taxa}`"
+            ),
+            color=0x2ecc71
+        )
+
+        await interaction.response.send_message(embed=embed)
+
+    # ================= LOJA =================
+
+    @economia.command(name="lojinha", description="Loja diária")
+    async def shop(self, interaction: discord.Interaction):
+
+        today = int(datetime.datetime.utcnow().strftime("%Y%m%d"))
+        random.seed(today)
+
+        items = [
+            ("📦 Lootbox", 500),
+            ("🎰 Ticket de cassino", 300),
+            ("💎 Gem misteriosa", 1200),
+            ("🍀 Amuleto", 800),
+            ("🎨 Cor", 2000),
+            ("⚡ Boost", 1000)
+        ]
+
+        shop_items = random.sample(items, 3)
+
+        text = "\n".join(
+            [f"{i+1}. {item[0]} — `{item[1]} coins`" for i, item in enumerate(shop_items)]
+        )
+
+        embed = discord.Embed(
+            title="🛒 Loja diária",
+            description=text,
+            color=0x3498db
+        )
+
+        await interaction.response.send_message(embed=embed)
+
+    # ================= ERROS =================
 
     async def cog_app_command_error(self, interaction: discord.Interaction, error):
 
@@ -386,14 +414,10 @@ class Economia(commands.Cog):
             segundos = segundos % 60
 
             await interaction.response.send_message(
-                f"Você ja trabalhou por 8 horas.\n"
-                f"De acordo com as leis trabalhistas você só pode trabalhar por 8 horas\n"
                 f"Tente novamente em **{minutos}m {segundos}s**."
             )
-    
-    @economia.command(name="lojinha", description="Veja a loja diária")
-    async def shop(self, interaction: discord.Interaction):
 
+<<<<<<< Updated upstream
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -436,6 +460,8 @@ class Economia(commands.Cog):
         embed.set_footer(text="A loja muda todos os dias!")
 
         await interaction.response.send_message(embed=embed)
+=======
+>>>>>>> Stashed changes
 
     @economia.command(name="inventario", description="Veja seus itens")
     async def inventario(self, interaction: discord.Interaction):
