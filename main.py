@@ -25,7 +25,6 @@ async def on_ready():
     
 async def main():
     async with bot:
-        await bot.load_extension("cogs.comandos")
         await bot.load_extension("cogs.tickets")
         await bot.load_extension("cogs.comandos_mod")
         await bot.load_extension("cogs.Misc")
