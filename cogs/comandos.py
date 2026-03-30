@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from datetime import timedelta
 
-class Mods(commands.Cog):
+class comandos(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -86,4 +86,4 @@ class Mods(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(Mods(bot))
+    await bot.add_cog(comandos(bot))
