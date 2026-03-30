@@ -10,63 +10,53 @@ class Reminders(commands.Cog):
         self.bot = bot
         self.check_reminders.start()
 
-
     def cog_unload(self):
         self.check_reminders.cancel()
-
 
     @tasks.loop(minutes=1)
     async def check_reminders(self):
 
         agora = datetime.datetime.now(
-             ZoneInfo("America/Sao_Paulo"
-        )).strftime("%H:%M")
+            ZoneInfo("America/Sao_Paulo")
+        ).strftime("%H:%M")
 
-        conn = get_connection()
-        cursor = conn.cursor()
+        pool = await get_connection()
 
-        cursor.execute("""
-        SELECT guild_id, channel_id, embed_id
-        FROM reminders
-        WHERE horario=%s
-        """, (agora,))
+        async with pool.acquire() as conn:
 
-        reminders = cursor.fetchall()
+            reminders = await conn.fetch("""
+                SELECT guild_id, channel_id, embed_id
+                FROM reminders
+                WHERE horario=$1
+            """, agora)
 
-        for guild_id, channel_id, embed_id in reminders:
+            for r in reminders:
 
-            cursor.execute("""
-            SELECT title, description, color, image
-            FROM embeds
-            WHERE id=%s AND guild_id=%s
-            """, (embed_id, guild_id))
+                embed_data = await conn.fetchrow("""
+                    SELECT title, description, color, image
+                    FROM embeds
+                    WHERE id=$1 AND guild_id=$2
+                """, r["embed_id"], r["guild_id"])
 
-            embed_data = cursor.fetchone()
+                if not embed_data:
+                    continue
 
-            if not embed_data:
-                continue
+                embed = discord.Embed(
+                    title=embed_data["title"],
+                    description=embed_data["description"],
+                    color=embed_data["color"]
+                )
 
-            title, description, color, image = embed_data
+                if embed_data["image"]:
+                    embed.set_image(url=embed_data["image"])
 
-            embed = discord.Embed(
-                title=title,
-                description=description,
-                color=color
-            )
+                channel = self.bot.get_channel(r["channel_id"])
 
-            if image:
-                embed.set_image(url=image)
-
-            channel = self.bot.get_channel(channel_id)
-
-            if channel:
-                try:
-                    await channel.send(embed=embed)
-                except:
-                    pass
-
-        conn.close()
-
+                if channel:
+                    try:
+                        await channel.send(embed=embed)
+                    except Exception as e:
+                        print(f"Erro ao enviar embed: {e}")
 
     @check_reminders.before_loop
     async def before_loop(self):

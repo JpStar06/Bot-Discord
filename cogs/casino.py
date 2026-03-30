@@ -13,41 +13,33 @@ class Casino(commands.Cog):
     casino = app_commands.Group(name="casino", description="Jogos de aposta")
 
     # pegar coins
-    def get_coins(self, user_id):
-        conn = get_connection()
-        cursor = conn.cursor()
+    async def get_coins(self, user_id):
+        pool = await get_connection()
 
-        cursor.execute(
-            "SELECT coins FROM economy WHERE user_id=%s",
-            (user_id,)
-        )
-
-        result = cursor.fetchone()
-
-        if not result:
-            cursor.execute(
-                "INSERT INTO economy (user_id, coins) VALUES (%s,%s)",
-                (user_id, 0)
+        async with pool.acquire() as conn:
+            result = await conn.fetchrow(
+                "SELECT coins FROM economy WHERE user_id=$1",
+                user_id
             )
-            conn.commit()
-            conn.close()
-            return 0
 
-        conn.close()
-        return result[0]
+            if not result:
+                await conn.execute(
+                    "INSERT INTO economy (user_id, coins) VALUES ($1, $2)",
+                    user_id, 0
+                )
+                return 0
+
+            return result["coins"]
 
     # adicionar coins
-    def add_coins(self, user_id, amount):
-        conn = get_connection()
-        cursor = conn.cursor()
+    async def add_coins(self, user_id, amount):
+        pool = await get_connection()
 
-        cursor.execute(
-            "UPDATE economy SET coins = coins + %s WHERE user_id=%s",
-            (amount, user_id)
-        )
-
-        conn.commit()
-        conn.close()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE economy SET coins = coins + $1 WHERE user_id=$2",
+                amount, user_id
+            )
 
     # COINFLIP
     @casino.command(name="coinflip", description="Cara ou coroa")
@@ -67,7 +59,7 @@ class Casino(commands.Cog):
             )
             return
 
-        coins = self.get_coins(interaction.user.id)
+        coins = await self.get_coins(interaction.user.id)
 
         if aposta > coins:
             await interaction.response.send_message(
@@ -79,10 +71,10 @@ class Casino(commands.Cog):
         resultado = random.choice(["cara", "coroa"])
 
         if escolha == resultado:
-            self.add_coins(interaction.user.id, aposta)
+            await self.add_coins(interaction.user.id, aposta)
             msg = f"🪙 **{resultado}**\nVocê ganhou `{aposta}` coins!"
         else:
-            self.add_coins(interaction.user.id, -aposta)
+            await self.add_coins(interaction.user.id, -aposta)
             msg = f"🪙 **{resultado}**\nVocê perdeu `{aposta}` coins."
 
         await interaction.response.send_message(msg)
@@ -92,7 +84,7 @@ class Casino(commands.Cog):
     @app_commands.checks.cooldown(30, 1200)
     async def dice(self, interaction: discord.Interaction, aposta: int):
 
-        coins = self.get_coins(interaction.user.id)
+        coins = await self.get_coins(interaction.user.id)
 
         if aposta > coins:
             await interaction.response.send_message(
@@ -102,16 +94,16 @@ class Casino(commands.Cog):
             return
 
         player = random.randint(1, 6)
-        bot = random.randint(1, 6)
+        bot_num = random.randint(1, 6)
 
-        if player > bot:
-            self.add_coins(interaction.user.id, aposta)
-            resultado = f"🎲 Você: {player}\n🎲 Bot: {bot}\nVocê ganhou `{aposta}` coins!"
-        elif player < bot:
-            self.add_coins(interaction.user.id, -aposta)
-            resultado = f"🎲 Você: {player}\n🎲 Bot: {bot}\nVocê perdeu `{aposta}` coins."
+        if player > bot_num:
+            await self.add_coins(interaction.user.id, aposta)
+            resultado = f"🎲 Você: {player}\n🎲 Bot: {bot_num}\nVocê ganhou `{aposta}` coins!"
+        elif player < bot_num:
+            await self.add_coins(interaction.user.id, -aposta)
+            resultado = f"🎲 Você: {player}\n🎲 Bot: {bot_num}\nVocê perdeu `{aposta}` coins."
         else:
-            resultado = f"🎲 Você: {player}\n🎲 Bot: {bot}\nEmpate!"
+            resultado = f"🎲 Você: {player}\n🎲 Bot: {bot_num}\nEmpate!"
 
         await interaction.response.send_message(resultado)
 
@@ -120,7 +112,7 @@ class Casino(commands.Cog):
     @app_commands.checks.cooldown(30, 1200)
     async def slots(self, interaction: discord.Interaction, aposta: int):
 
-        coins = self.get_coins(interaction.user.id)
+        coins = await self.get_coins(interaction.user.id)
 
         if aposta > coins:
             await interaction.response.send_message(
@@ -139,14 +131,14 @@ class Casino(commands.Cog):
 
         if r1 == r2 == r3:
             ganho = aposta * 6
-            self.add_coins(interaction.user.id, ganho)
+            await self.add_coins(interaction.user.id, ganho)
             resultado += f"🎉 JACKPOT! Você ganhou `{ganho}` coins!"
         elif r1 == r2 or r2 == r3 or r1 == r3:
             ganho = aposta * 3
-            self.add_coins(interaction.user.id, ganho)
+            await self.add_coins(interaction.user.id, ganho)
             resultado += f"✨ Você ganhou `{ganho}` coins!"
         else:
-            self.add_coins(interaction.user.id, -aposta)
+            await self.add_coins(interaction.user.id, -aposta)
             resultado += f"💀 Você perdeu `{aposta}` coins."
 
         await interaction.response.send_message(resultado)

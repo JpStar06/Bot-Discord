@@ -3,7 +3,7 @@ from discord.ext import commands
 import asyncio
 import os
 import dotenv
-from database import setup_database
+from database import init_db
 
 dotenv.load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -15,11 +15,14 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
+    if not hasattr(bot, "db_initialized"):
+        await init_db()
+        bot.db_initialized = True
+        print("✅ Banco iniciado")
+
     await bot.tree.sync()
     print(f"Logado como {bot.user}")
-    setup_database()
-    print("banco de dados conectado")
-
+    
 async def main():
     async with bot:
         await bot.load_extension("cogs.comandos")
