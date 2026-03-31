@@ -6,7 +6,7 @@ from discord.ext import commands
 from database import get_connection
 
 
-class Casino(commands.Cog):
+class Casinocomando(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -116,4 +116,4 @@ class Casino(commands.Cog):
 
 # -------------------- SETUP --------------------
 async def setup(bot):
-    await bot.add_cog(Casino(bot))
+    await bot.add_cog(Casinocomando(bot))
