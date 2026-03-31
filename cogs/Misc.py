@@ -28,7 +28,7 @@ class Misc(commands.Cog):
         embed = discord.Embed(
             title="🎱 8Ball",
             description=f"**Pergunta:** {pergunta}\n**Resposta:** {resposta}",
-            color=discord.Color.dark_embed()
+            color=0x2f3136
         )
 
         await interaction.response.send_message(embed=embed)
@@ -37,23 +37,12 @@ class Misc(commands.Cog):
     @play.command(name="fight", description="Lute com outro usuário.")
     async def fight(self, interaction: discord.Interaction, usuario: discord.Member):
 
-        # evita lutar contra si mesmo
-        if usuario.id == interaction.user.id:
-            await interaction.response.send_message(
-                "🤨 Você não pode lutar contra você mesmo!",
-                ephemeral=True
-            )
-            return
-
         vencedor = random.choice([interaction.user, usuario])
 
         embed = discord.Embed(
             title="⚔️ Luta!",
-            description=(
-                f"{interaction.user.mention} lutou contra {usuario.mention}!\n\n"
-                f"🏆 **Vencedor:** {vencedor.mention}"
-            ),
-            color=discord.Color.red()
+            description=f"{interaction.user.mention} lutou contra {usuario.mention}!\n\n🏆 **Vencedor:** {vencedor.mention}",
+            color=0xe74c3c
         )
 
         await interaction.response.send_message(embed=embed)

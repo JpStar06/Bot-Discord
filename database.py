@@ -75,37 +75,6 @@ async def init_db():
 
         print("📦 Tabelas verificadas/criadas com sucesso!")
 
-    cursor.execute("""
-    CREATE TABLE items (
-        item_id TEXT PRIMARY KEY,
-        nome TEXT NOT NULL,
-        descricao TEXT,
-        tipo TEXT,
-        raridade TEXT,
-        preco_base INTEGER,
-        emoji TEXT,
-        usavel BOLEAN
-    )
-""")
-    
-    cursor.execute("""
-    CREATE TABLE members_inventory (
-        user_id BIGINT,
-        item_id TEXT,
-        quantidade INTEGER DEFAULT 0,
-        PRIMARY KEY (user_id, item_id
-    )
-""")
-    
-    cursor.execute("""
-    CREATE TABLE marketplace (
-        listing_id SERIAL PRIMARY KEY,
-        seller_id BIGINT,
-        item_id TEXT,
-        quantidade INT,
-        preco INT
-    )
-""")
 
 # pegar conexão do pool
 async def get_connection():
