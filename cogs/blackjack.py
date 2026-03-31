@@ -2,9 +2,9 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import random
-from .casino import Casinocomando
+from .casino import casino
 
-casino = Casinocomando.casino
+casino = casino
 
 # 🎴 cartas com símbolo
 cards = [

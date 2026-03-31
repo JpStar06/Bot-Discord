@@ -5,12 +5,11 @@ from discord import app_commands
 from discord.ext import commands
 from database import get_connection
 
+casino = app_commands.Group(name="casino", description="Jogos de aposta")
 
 class Casinocomando(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    casino = app_commands.Group(name="casino", description="Jogos de aposta")
 
     # -------------------- FUNÇÕES DE COINS --------------------
     async def get_coins(self, user_id: int) -> int:
