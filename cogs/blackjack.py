@@ -4,6 +4,7 @@ from discord import app_commands
 import random
 from .casino import Casino
 
+casino = Casino.casino
 
 # 🎴 cartas com símbolo
 cards = [
@@ -110,8 +111,6 @@ class BlackjackView(discord.ui.View):
 class Blackjack(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    casino = Casino.casino
 
     async def add_coins(self, user_id, amount):
         # 👉 conecta com seu sistema real depois
