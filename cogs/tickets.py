@@ -48,21 +48,23 @@ class TicketView(discord.ui.View):
         await interaction.response.send_message(f"🎫 Ticket criado: {thread.mention}", ephemeral=True)
 
         fechar_view = FecharTicketView()
-        await thread.send(f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe.", view=fechar_view)
+
+        embed = diacord.Embed(
+            title="**ESPERE SER ATENDIDO**",
+            description=(
+                "Nossa equipe de moderadores pode estar ocupada no momento.\n"
+                "Envie somente o necessário e não marque os moderadores."
+            ),
+            color=discord.Color.red()
+        )
+        
+        await thread.send(f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe.", embed=embed, view=fechar_view)
 
 
 # -------------------- VIEW PARA FECHAR TICKETS --------------------
 class FecharTicketView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-
-    embed = discord.Embed(
-        title = '**ESPERE SER ATENDIDO**',
-        description = 'Nossa equipe de moderadores pode estar ocupada no momento.\n Envie somente o nescessário e não marque os moderadores.',
-        color = discord.Color.red()
-    )
-    await interaction.response.send_message(embed=embed)
-
     @discord.ui.button(label="Fechar Ticket", style=discord.ButtonStyle.danger, emoji="🔒", custom_id="fechar_ticket")
     async def fechar_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message("🔒 Fechando ticket em 5 segundos...", ephemeral=True)
