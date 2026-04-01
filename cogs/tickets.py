@@ -49,7 +49,7 @@ class TicketView(discord.ui.View):
 
         fechar_view = FecharTicketView()
 
-        fect = diacord.Embed(
+        fect = discord.Embed(
             title="**ESPERE SER ATENDIDO**",
             description=(
                 "Nossa equipe de moderadores pode estar ocupada no momento.\n"
