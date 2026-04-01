@@ -157,7 +157,7 @@ class Economia(commands.Cog):
         await self.add_coins(interaction.user.id, reward)
         embed = discord.Embed(
             title = '**🎉PARABÉNS🎉**',
-            description = f"📦 Lootbox aberta!\n{rarity}\nVocê ganhou **{reward} coins",
+            description = f"📦 Lootbox aberta!\n{rarity}\nVocê ganhou **{reward} coins**",
             color = discord.Color.green()
         )
         await interaction.response.send_message(embed = embed)
