@@ -155,8 +155,12 @@ class Economia(commands.Cog):
         ]
         reward, rarity = random.choices(rewards, weights=[60,25,10,5,1])[0]
         await self.add_coins(interaction.user.id, reward)
-
-        await interaction.response.send_message(f"📦 Lootbox aberta!\n{rarity}\nVocê ganhou **{reward} coins**")
+        embed = discord.Embed(
+            title = '**🎉PARABÉNS🎉**',
+            description = f"📦 Lootbox aberta!\n{rarity}\nVocê ganhou **{reward} coins",
+            color = discord.Color.green()
+        )
+        await interaction.response.send_message(embed = embed)
 
     # -------------------- PAY --------------------
     @economia.command(name="pay", description="Envie coins para outro usuário")
