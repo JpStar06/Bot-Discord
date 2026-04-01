@@ -47,7 +47,11 @@ async def init_db():
             emoji TEXT,
             canal_id BIGINT,
             staff_id BIGINT,
-            imagem TEXT
+            imagem TEXT,
+            titulo_cliente TEXT,
+            descricao_cliente TEXT,
+            cor_cliente INTEGER,
+            imagem_cliente TEXT
         )
         """)
 

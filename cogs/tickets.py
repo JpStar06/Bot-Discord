@@ -49,16 +49,26 @@ class TicketView(discord.ui.View):
 
         fechar_view = FecharTicketView()
 
-        fect = discord.Embed(
-            title="**ESPERE SER ATENDIDO**",
-            description=(
-                "Nossa equipe de moderadores pode estar ocupada no momento.\n"
-                "Envie somente o necessário e não marque os moderadores."
-            ),
-            color=discord.Color.red()
+        dados = await conn.fetchrow(
+            """
+            SELECT 
+                titulo_cliente, descricao_cliente, cor_cliente, imagem_cliente
+            FROM tickets 
+            WHERE id=$1 AND guild_id=$2
+            """,
+            self.ticket_id,
+            interaction.guild.id
         )
-        
-        await thread.send(f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe.", embed=fect, view=fechar_view)
+
+        embed = discord.Embed(
+            title=dados["titulo_cliente"],
+            description=dados["descricao_cliente"],
+            color=dados["cor_cliente"]
+        )
+        if dados["imagem_cliente"]:
+            embed.set_image(url=dados["imagem_cliente"])
+
+        await thread.send(content=f"{interaction.user.mention}", embed=embed, view=FecharTicketView())
 
 
 # -------------------- VIEW PARA FECHAR TICKETS --------------------
@@ -89,8 +99,8 @@ class Tickets(commands.Cog):
         conn = await get_connection()
         ticket_id = await conn.fetchval(
             """
-            INSERT INTO tickets (guild_id, titulo, descricao, cor, emoji, canal_id, staff_id, imagem)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO tickets (guild_id, titulo, descricao, cor, emoji, canal_id, staff_id, imagem, titulo_cliente, descricao_cliente, cor_cliente, imagem_cliente)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             RETURNING id
             """,
             interaction.guild.id,
@@ -100,6 +110,9 @@ class Tickets(commands.Cog):
             "🎫",
             interaction.channel.id,
             None,
+            None,
+            "**ESPERE SER ATENDIDO**",
+            "Nossa equipe de moderadores pode estar ocupada no momento.\nEnvie somente o necessário e não marque os moderadores.",
             None
         )
         await conn.close()
