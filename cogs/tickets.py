@@ -49,7 +49,7 @@ class TicketView(discord.ui.View):
 
         fechar_view = FecharTicketView()
 
-        embed = diacord.Embed(
+        fect = diacord.Embed(
             title="**ESPERE SER ATENDIDO**",
             description=(
                 "Nossa equipe de moderadores pode estar ocupada no momento.\n"
@@ -58,7 +58,7 @@ class TicketView(discord.ui.View):
             color=discord.Color.red()
         )
         
-        await thread.send(f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe.", embed=embed, view=fechar_view)
+        await thread.send(f"{interaction.user.mention} abriu um ticket.\nAguarde a equipe.", embed=fect, view=fechar_view)
 
 
 # -------------------- VIEW PARA FECHAR TICKETS --------------------
