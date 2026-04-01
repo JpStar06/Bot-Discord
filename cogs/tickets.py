@@ -61,7 +61,7 @@ class FecharTicketView(discord.ui.View):
         description = 'Nossa equipe de moderadores pode estar ocupada no momento.\n Envie somente o nescessário e não marque os moderadores.',
         color = discord.Color.red()
     )
-    await intaraction.response.send_massage(embed=embed)
+    await interaction.response.send_message(embed=embed)
 
     @discord.ui.button(label="Fechar Ticket", style=discord.ButtonStyle.danger, emoji="🔒", custom_id="fechar_ticket")
     async def fechar_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
