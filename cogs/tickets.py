@@ -61,9 +61,9 @@ class TicketView(discord.ui.View):
         )
 
         embed = discord.Embed(
-            title=dados["titulo_cliente"],
-            description=dados["descricao_cliente"],
-            color=dados["cor_cliente"]
+            title=dados["titulo_cliente"] or "Ticket",
+            description=dados["descricao_cliente"] or "Aguarde atendimento",
+            color=dados["cor_cliente"] or 0xFF0000
         )
         if dados["imagem_cliente"]:
             embed.set_image(url=dados["imagem_cliente"])
@@ -113,7 +113,8 @@ class Tickets(commands.Cog):
             None,
             "**ESPERE SER ATENDIDO**",
             "Nossa equipe de moderadores pode estar ocupada no momento.\nEnvie somente o necessário e não marque os moderadores.",
-            None
+            None,
+            0x3498db
         )
         await conn.close()
 
@@ -124,6 +125,11 @@ class Tickets(commands.Cog):
         )
         view = TicketView(ticket_id)
         await interaction.response.send_message(f"Painel criado com ID `{ticket_id}`", embed=embed, view=view)
+   
+    #---------------------EDITAR TICKETS----------------------
+    """@tickets.command(name="editar", description="Edita tickets")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def editartickets(self, interaction: discord.Interaction):"""
 
     # -------------------- LISTAR TICKETS --------------------
     @tickets.command(name="listar", description="Lista tickets.")
