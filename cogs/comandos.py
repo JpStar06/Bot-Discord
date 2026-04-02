@@ -38,14 +38,14 @@ class Comandos(commands.Cog):
     # -------------------- EDITAR EMBED --------------------
     @embed.command(name="editar", description="Edita um embed.")
     @app_commands.checks.has_permissions(administrator=True)
-    async def editarembed(self, interaction: discord.Interaction, id: int, novo_titulo: str, novo_descricao: str = None, nova_cor: int = None, imagem_url: str = None):
+    async def editarembed(self, interaction: discord.Interaction, id: int, novo_titulo: str = None, novo_descricao: str = None, nova_cor: int = None, imagem_url: str = None):
         async with self.pool.acquire() as conn:
             embed_data = await conn.fetchrow("SELECT title, description, color, image FROM embeds WHERE id=$1 AND guild_id=$2", id, interaction.guild.id)
             if not embed_data:
                 await interaction.response.send_message("Embed não encontrado.", ephemeral=True)
                 return
 
-            title = novo_titulo
+            title = novo_titulo or embed_data["title"]
             description = novo_descricao or embed_data["description"]
             color = nova_cor or embed_data["color"]
             image = imagem_url or embed_data["image"]

@@ -153,6 +153,31 @@ class Tickets(commands.Cog):
             embed=embed,
             view=TicketView(ticket_id)
         )
+    #---------------------EDITAR PAINEL---------------------
+    @tickets.command(name="editar-painel", description="Edita o painel principal do ticket")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def editarticket(self, interaction: discord.Interaction, id: int, novo_titulo: str = None, novo_descricao: str = None, nova_cor: int = None, imagem_url: str = None):
+        async with self.pool.acquire() as conn:
+            ticket_data = await conn.fetchrow("SELECT title, description, color, image FROM tickets WHERE id=$1, guild_id=$2", id, interaction.guild.id)
+        if not ticket_data:
+            await interaction.reponse.send_message("Ticket não encontrado.", ephemeral=True)
+            return
+        
+        title = novo_titulo or ticket_data["title"]
+        description = novo_descricao or ticket_data["description"]
+        color = nova_cor or ticket_data["color"]
+        image = imagem_url or ticket_data["image"]
+
+        await conn.execute("""
+            UPDATE tickets SET title=$1, description=$2, color=$3, image=$4
+            WHERE id=$5 AND guild_id=$6
+        """, title, description, color, image, id, interaction.guild_id)
+
+        embed = discord.Embed(title=title, description=description, color=color)
+        if image:
+            embed.set_image(url=image)
+        await interaction.response.send_message("Embed atualizado:", embed=embed)
+
     #---------------------DELETAR--------------------
     @tickets.command(name="deletar", description="Deleta um ticket.")
     @app_commands.checks.has_permissions(administrator=True)
