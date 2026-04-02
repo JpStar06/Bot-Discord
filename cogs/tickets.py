@@ -153,7 +153,13 @@ class Tickets(commands.Cog):
             embed=embed,
             view=TicketView(ticket_id)
         )
-
+    #---------------------DELETAR--------------------
+    @tickets.command(name="deletar", description="Deleta um ticket.")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def deletarticket(self, interaction: discord.Interaction, id: int):
+        async with self.pool.acquire() as conn:
+            await conn.execute("DELETE FROM tickets WHERE id=$1 AND guild_id=$2", id, interaction.guild.id)
+        await interaction.response.send_message(f"Embed `{id}` deletado.")
     # -------------------- LISTAR --------------------
     @tickets.command(name="listar", description="Lista tickets.")
     async def listartickets(self, interaction: discord.Interaction):
