@@ -156,7 +156,7 @@ class Tickets(commands.Cog):
     #---------------------EDITAR PAINEL---------------------
     @tickets.command(name="editar-painel", description="Edita o painel principal do ticket")
     @app_commands.checks.has_permissions(administrator=True)
-    async def editarticket(
+    async def editarpainel(
         self,
         interaction: discord.Interaction,
         id: int,
@@ -188,6 +188,54 @@ class Tickets(commands.Cog):
             """
             UPDATE tickets 
             SET titulo=$1, descricao=$2, cor=$3, imagem=$4
+            WHERE id=$5 AND guild_id=$6
+            """,
+            titulo, descricao, cor, imagem, id, interaction.guild.id
+        )
+
+        await conn.close()
+
+        embed = discord.Embed(title=titulo, description=descricao, color=cor)
+
+        if imagem:
+            embed.set_image(url=imagem)
+
+        await interaction.response.send_message("✅ Embed atualizado:", embed=embed)
+    #-------------------EDITAR TÓPICO----------------
+    @tickets.command(name="editar-tópico", description="Edita o painel que aparece no tópico")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def editartopico(
+        self,
+        interaction: discord.Interaction,
+        id: int,
+        novo_titulo: str = None,
+        novo_descricao: str = None,
+        nova_cor: int = None,
+        imagem_url: str = None
+    ):
+        
+        conn = await get_connection()
+
+        ticket_data = await conn.fetchrow(
+            "SELECT titulo_cliente, descricao_cliente, cor_cliente, imagem_cliente FROM tickets WHERE id=$1 AND guild_id=$2",
+            id,
+            interaction.guild.id
+        )
+
+        if not ticket_data:
+            await interaction.response.send_message("Ticket não encontrado.", ephemeral=True)
+            await conn.close()
+            return
+        
+        titulo = novo_titulo or ticket_data["titulo_cliente"]
+        descricao = novo_descricao or ticket_data["descricao_cliente"]
+        cor = nova_cor or ticket_data["cor_cliente"]
+        imagem = imagem_url or ticket_data["imagem_cliente"]
+
+        await conn.execute(
+            """
+            UPDATE tickets 
+            SET titulo_cliente=$1, descricao_cliente=$2, cor_cliente=$3, imagem_cliente=$4
             WHERE id=$5 AND guild_id=$6
             """,
             titulo, descricao, cor, imagem, id, interaction.guild.id
