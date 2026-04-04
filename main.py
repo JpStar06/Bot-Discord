@@ -21,16 +21,22 @@ async def on_ready():
 
 
 async def main():
-    await init_db()  # 🔥 INICIA O BANCO ANTES DAS COGS
+    await init_db()
 
     async with bot:
-        await bot.load_extension("cogs.comandos")
-        await bot.load_extension("cogs.tickets")
-        await bot.load_extension("cogs.comandos_mod")
-        await bot.load_extension("cogs.Misc")
-        await bot.load_extension("cogs.comercio")
-        await bot.load_extension("cogs.reminders")
-        await bot.load_extension("cogs.casino")
+        count = 0
+        for file in os.listdir("./cogs"):
+            if file.endswith(".py") and file != "__init__.py":
+                cog_name = file[:-3]  # remove .py
+                cog = f"cogs.{cog_name}"
+
+                try:
+                    await bot.load_extension(cog)
+                    print(f"✅ Cog '{cog_name}' carregada com sucesso!")
+                    count += 1
+                except Exception as e:
+                    print(f"❌ Erro ao carregar '{cog_name}': {e}")
+        print(f"\n🚀 Total de cogs carregadas: {count}")
 
         await bot.start(TOKEN)
 
