@@ -6,7 +6,7 @@ from . import services
 from . import embeds
 from .view import TicketBuilderView
 
-class Comandos(commands.Cog):
+class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.pool = None
@@ -73,4 +73,4 @@ class Comandos(commands.Cog):
         await interaction.response.send_message(embed=embeds.acerto(f"✅ ticket `{id}` enviado para {canal.mention}!"))
 
 async def setup(bot):
-    await bot.add_cog(Comandos(bot))
+    await bot.add_cog(Tickets(bot))
