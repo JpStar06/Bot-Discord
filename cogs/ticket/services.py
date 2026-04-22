@@ -3,8 +3,6 @@ import os
 import discord
 from database import get_connection
 
-
-
 # ---------- CREATE ----------
 
 async def criarticket(guild_id: int, channel_id: int):
@@ -84,68 +82,3 @@ async def editar_ticket(guild_id: int, embed_id: int, novo_titulo=None, nova_des
             "color": color,
             "image": image
         }
-
-async def update_topic(guild_id: int, ticket_id: int, data: dict):
-    pool = await get_pool()
-    async with pool.acquire() as conn:
-        await conn.execute(
-            """
-            UPDATE tickets
-            SET
-                titulo_cliente=$1,
-                descricao_cliente=$2,
-                cor_cliente=$3,
-                imagem_cliente=$4,
-                staff_id=$5
-            WHERE id=$6 AND guild_id=$7
-            """,
-            data["titulo_cliente"],
-            data["descricao_cliente"],
-            data["cor_cliente"],
-            data.get("imagem_cliente"),
-            data.get("staff_id"),
-            ticket_id,
-            guild_id,
-        )
-
-# ---------- THREAD ----------
-
-async def create_thread(
-    interaction: discord.Interaction,
-    ticket_id: int,
-    user: discord.Member,
-):
-    pool = await get_pool()
-    async with pool.acquire() as conn:
-        data = await conn.fetchrow(
-            """
-            SELECT
-                titulo_cliente, descricao_cliente,
-                cor_cliente, imagem_cliente, staff_id
-            FROM tickets
-            WHERE id=$1 AND guild_id=$2
-            """,
-            ticket_id,
-            interaction.guild.id,
-        )
-
-    if not data:
-        return None, "Configuração não encontrada."
-
-    try:
-        thread = await interaction.channel.create_thread(
-            name=f"ticket-{user.name}",
-            type=discord.ChannelType.private_thread,
-        )
-        await thread.add_user(user)
-
-        if data["staff_id"]:
-            role = interaction.guild.get_role(data["staff_id"])
-            if role:
-                for member in role.members:
-                    await thread.add_user(member)
-
-    except discord.HTTPException as e:
-        return None, str(e)
-
-    return thread, data
