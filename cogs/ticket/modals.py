@@ -1,78 +1,68 @@
 import discord
 
-class EditTitleModal(discord.ui.Modal, title="Editar Título"):
+class TitleModal(discord.ui.Modal, title="Editar Título"):
+    novo_titulo = discord.ui.TextInput(label="Novo título")
 
     def __init__(self, view):
         super().__init__()
         self.view = view
-
-        self.titulo = discord.ui.TextInput(
-            label="Título",
-            default=view.data.get("titulo")
-        )
-
-        self.add_item(self.titulo)
 
     async def on_submit(self, interaction: discord.Interaction):
-        self.view.data["titulo"] = self.titulo.value
-        await self.view.update_message(interaction)
+        self.view.title = self.novo_titulo.value
+
+        await interaction.response.edit_message(
+            embed=self.view.build_embed(),
+            view=self.view
+        )
 
 
-class EditDescriptionModal(discord.ui.Modal, title="Editar Descrição"):
+class DescModal(discord.ui.Modal, title="Editar Descrição"):
+    descricao = discord.ui.TextInput(label="Descrição", style=discord.TextStyle.paragraph)
 
     def __init__(self, view):
         super().__init__()
         self.view = view
 
-        self.desc = discord.ui.TextInput(
-            label="Descrição",
-            style=discord.TextStyle.paragraph,
-            default=view.data.get("descricao")
+    async def on_submit(self, interaction: discord.Interaction):
+        self.view.description = self.descricao.value
+
+        await interaction.response.edit_message(
+            embed=self.view.build_embed(),
+            view=self.view
         )
 
-        self.add_item(self.desc)
 
-    async def on_submit(self, interaction):
-        self.view.data["descricao"] = self.desc.value
-        await self.view.update_message(interaction)
-
-
-class EditColorModal(discord.ui.Modal, title="Editar Cor"):
+class ColorModal(discord.ui.Modal, title="Editar Cor"):
+    cor = discord.ui.TextInput(label="Cor (hex)", placeholder="#3498db")
 
     def __init__(self, view):
         super().__init__()
         self.view = view
 
-        self.cor = discord.ui.TextInput(
-            label="Cor (hex)",
-            default=str(view.data.get("cor"))
-        )
-
-        self.add_item(self.cor)
-
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
-            self.view.data["cor"] = int(self.cor.value, 16)
+            self.view.color = int(self.cor.value.replace("#", ""), 16)
         except:
-            self.view.data["cor"] = int(self.cor.value)
+            await interaction.response.send_message("Cor inválida!", ephemeral=True)
+            return
 
-        await self.view.update_message(interaction)
+        await interaction.response.edit_message(
+            embed=self.view.build_embed(),
+            view=self.view
+        )
 
 
-class EditImageModal(discord.ui.Modal, title="Editar Imagem"):
+class ImageModal(discord.ui.Modal, title="Imagem"):
+    url = discord.ui.TextInput(label="URL da imagem")
 
     def __init__(self, view):
         super().__init__()
         self.view = view
 
-        self.img = discord.ui.TextInput(
-            label="URL da imagem",
-            required=False,
-            default=view.data.get("imagem")
+    async def on_submit(self, interaction: discord.Interaction):
+        self.view.image = self.url.value
+
+        await interaction.response.edit_message(
+            embed=self.view.build_embed(),
+            view=self.view
         )
-
-        self.add_item(self.img)
-
-    async def on_submit(self, interaction):
-        self.view.data["imagem"] = self.img.value or None
-        await self.view.update_message(interaction)
