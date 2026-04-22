@@ -85,3 +85,43 @@ class ImageModal(discord.ui.Modal, title="Imagem"):
             embed=self.view.build_embed(),
             view=self.view
         )
+
+class StaffModal(discord.ui.Modal, title="Definir cargo staff"):
+    cargo = discord.ui.TextInput(
+        label="ID do cargo ou @menção",
+        placeholder="@Staff ou 123456789"
+    )
+
+    def __init__(self, view):
+        super().__init__()
+        self.view = view
+
+    async def on_submit(self, interaction: discord.Interaction):
+
+        value = self.cargo.value.replace("<@&", "").replace(">", "")
+
+        try:
+            role_id = int(value)
+        except:
+            await interaction.response.send_message(
+                "❌ Cargo inválido!",
+                ephemeral=True
+            )
+            return
+
+        role = interaction.guild.get_role(role_id)
+
+        if not role:
+            await interaction.response.send_message(
+                "❌ Cargo não encontrado!",
+                ephemeral=True
+            )
+            return
+
+        self.view.staff_role = role
+        self.view.staff_id = role.id
+
+        await interaction.response.edit_message(
+            embed=self.view.build_embed(),
+            view=self.view
+        )
