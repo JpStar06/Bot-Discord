@@ -5,6 +5,7 @@ from discord.ext import commands
 from . import services
 from . import embeds
 from .view import TicketBuilderView
+from .view import TicketOpenView
 
 
 class Tickets(commands.Cog):
@@ -91,6 +92,7 @@ class Tickets(commands.Cog):
             view.description = data["description"]
             view.color = discord.Color(data["color"])
             view.image = data["image"]
+            view.staff_id = data["staff_id"]
 
             await interaction.followup.send(
                 embed=view.build_embed(),
@@ -133,7 +135,7 @@ class Tickets(commands.Cog):
             if data["image"]:
                 embed.set_image(url=data["image"])
 
-            await canal.send(embed=embed)
+            await canal.send(embed=embed, view=TicketOpenView)
 
             await interaction.followup.send(
                 embed=embeds.acerto(
