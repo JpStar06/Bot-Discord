@@ -70,7 +70,7 @@ class Tickets(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def builder(self, interaction: discord.Interaction, id: int):
 
-        await interaction.response.defer()
+        await interaction.response.defer()  # 👈 ESSENCIAL
 
         try:
             data = await services.buscar_ticket(
@@ -79,11 +79,10 @@ class Tickets(commands.Cog):
             )
 
             if not data:
-                await interaction.followup.send(
-                    embed=embeds.erro("Ticket não encontrado."),
+                return await interaction.followup.send(
+                    embed=embeds.erro("ticket não encontrado."),
                     ephemeral=True
                 )
-                return
 
             view = TicketBuilderView(interaction.user, id)
 
@@ -92,7 +91,13 @@ class Tickets(commands.Cog):
             view.description = data["description"]
             view.color = discord.Color(data["color"])
             view.image = data["image"]
+
+            # 👮 carregar staff
             view.staff_id = data["staff_id"]
+            if data["staff_id"]:
+                role = interaction.guild.get_role(data["staff_id"])
+                if role:
+                    view.staff_role = role
 
             await interaction.followup.send(
                 embed=view.build_embed(),
@@ -101,7 +106,6 @@ class Tickets(commands.Cog):
 
         except Exception as e:
             await interaction.followup.send(f"❌ Erro: {e}")
-
     # -------------------- ENVIAR -------------------- #
     @tickets.command(name="enviar", description="envia o ticket para um canal")
     @app_commands.checks.has_permissions(administrator=True)
