@@ -101,3 +101,96 @@ class TicketBuilderView(discord.ui.View):
                 f"❌ Erro ao salvar: {e}",
                 ephemeral=True
             )
+
+class TicketOpenView(discord.ui.View):
+    def __init__(self, ticket_id: int):
+        super().__init__(timeout=None)
+        self.ticket_id = ticket_id
+
+    @discord.ui.button(
+        label="🎫 Abrir Ticket",
+        style=discord.ButtonStyle.green,
+        custom_id="ticket_open_private"
+    )
+    async def abrir_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        guild = interaction.guild
+        user = interaction.user
+
+        # 🔍 buscar config do ticket
+        data = await services.buscar_ticket(guild.id, self.ticket_id)
+
+        if not data:
+            return await interaction.response.send_message(
+                "❌ Configuração de ticket não encontrada.",
+                ephemeral=True
+            )
+
+        # 🚫 evitar duplicação
+        existing = discord.utils.get(guild.text_channels, name=f"ticket-{user.id}")
+        if existing:
+            return await interaction.response.send_message(
+                f"❌ Você já tem um ticket aberto: {existing.mention}",
+                ephemeral=True
+            )
+
+        # 👮 pegar cargo staff
+        staff_role = None
+        if data["staff_id"]:
+            staff_role = guild.get_role(data["staff_id"])
+
+        # 📁 categoria (cria se não existir)
+        category = discord.utils.get(guild.categories, name="Tickets")
+        if not category:
+            category = await guild.create_category("Tickets")
+
+        # 🔒 permissões
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(view_channel=False),
+            user: discord.PermissionOverwrite(
+                view_channel=True,
+                send_messages=True,
+                read_message_history=True
+            )
+        }
+
+        if staff_role:
+            overwrites[staff_role] = discord.PermissionOverwrite(
+                view_channel=True,
+                send_messages=True,
+                read_message_history=True
+            )
+
+        try:
+            # 📦 criar canal
+            channel = await guild.create_text_channel(
+                name=f"ticket-{user.id}",
+                category=category,
+                overwrites=overwrites
+            )
+
+            # 📩 embed do ticket
+            embed = discord.Embed(
+                title=data["title"],
+                description=data["description"],
+                color=discord.Color(data["color"])
+            )
+
+            if data["image"]:
+                embed.set_image(url=data["image"])
+
+            await channel.send(
+                content=f"{user.mention}" + (f" {staff_role.mention}" if staff_role else ""),
+                embed=embed
+            )
+
+            await interaction.response.send_message(
+                f"✅ Ticket criado: {channel.mention}",
+                ephemeral=True
+            )
+
+        except Exception as e:
+            await interaction.response.send_message(
+                f"❌ Erro ao criar ticket: {e}",
+                ephemeral=True
+            )
