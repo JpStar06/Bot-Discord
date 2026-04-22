@@ -79,7 +79,6 @@ class TicketBuilderView(discord.ui.View):
     # -------------------- SALVAR -------------------- #
     @discord.ui.button(label="💾 Salvar", style=discord.ButtonStyle.green)
     async def salvar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        print("VIEW STAFF_ID:", self.staff_id)
 
         try:
             await services.editar_ticket(
