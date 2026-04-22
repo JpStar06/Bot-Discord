@@ -48,7 +48,7 @@ async def buscar_ticket(guild_id: int, ticket_id: int):
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """
-            SELECT titulo, descricao, cor, imagem
+            SELECT titulo, descricao, cor, imagem, staff_id
             FROM tickets
             WHERE id=$1 AND guild_id=$2
             """,
@@ -62,7 +62,8 @@ async def buscar_ticket(guild_id: int, ticket_id: int):
             "title": row["titulo"],
             "description": row["descricao"],
             "color": row["cor"],
-            "image": row["imagem"]
+            "image": row["imagem"],
+            "staff_id": row["staff_id"]
         }
 
 
@@ -73,14 +74,15 @@ async def editar_ticket(
     novo_titulo=None,
     nova_descricao=None,
     nova_cor=None,
-    imagem_url=None
+    imagem_url=None,
+    staff_id=None
 ):
     pool = get_connection()
 
     async with pool.acquire() as conn:
         data = await conn.fetchrow(
             """
-            SELECT titulo, descricao, cor, imagem
+            SELECT titulo, descricao, cor, imagem, staff_id
             FROM tickets
             WHERE id=$1 AND guild_id=$2
             """,
@@ -94,19 +96,21 @@ async def editar_ticket(
         descricao = nova_descricao or data["descricao"]
         cor = nova_cor if nova_cor is not None else data["cor"]
         imagem = imagem_url if imagem_url is not None else data["imagem"]
+        staff = staff_id if staff_id is not None else data["staff_id"]
 
         await conn.execute(
             """
             UPDATE tickets
-            SET titulo=$1, descricao=$2, cor=$3, imagem=$4
-            WHERE id=$5 AND guild_id=$6
+            SET titulo=$1, descricao=$2, cor=$3, imagem=$4, staff_id=$5
+            WHERE id=$6 AND guild_id=$7
             """,
-            titulo, descricao, cor, imagem, ticket_id, guild_id
+            titulo, descricao, cor, imagem, staff, ticket_id, guild_id
         )
 
         return {
             "title": titulo,
             "description": descricao,
             "color": cor,
-            "image": imagem
+            "image": imagem,
+            "staff_id": staff
         }
