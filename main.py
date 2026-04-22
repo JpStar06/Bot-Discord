@@ -4,7 +4,6 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from database import init_db
-from cogs.ticket.view import EditTopicView
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
