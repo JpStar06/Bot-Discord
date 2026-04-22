@@ -1,34 +1,14 @@
-import asyncpg
-import os
+from database import get_connection
 import discord
-from dotenv import load_dotenv
-
-load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-# Pool global — inicializado uma vez no startup do bot
-_pool: asyncpg.Pool | None = None
-
-
-async def init_pool():
-    """Chame isso no startup do bot: await init_pool()"""
-    global _pool
-    _pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
-
-
-async def get_pool() -> asyncpg.Pool:
-    if _pool is None:
-        raise RuntimeError("Pool não inicializado. Chame await init_pool() no startup do bot.")
-    return _pool
 
 
 class TicketService:
 
     # ---------- CREATE ----------
-
     @staticmethod
     async def create_ticket(guild_id: int, channel_id: int):
-        pool = await get_pool()
+        pool = get_connection()
+
         async with pool.acquire() as conn:
             ticket_id = await conn.fetchval(
                 """
@@ -49,26 +29,28 @@ class TicketService:
                 "Nossa equipe pode estar ocupada.",
                 0xFF0000,
             )
+
         return ticket_id
 
     # ---------- GET ----------
-
     @staticmethod
     async def get_ticket(guild_id: int, ticket_id: int):
-        pool = await get_pool()
+        pool = get_connection()
+
         async with pool.acquire() as conn:
             data = await conn.fetchrow(
                 "SELECT * FROM tickets WHERE id=$1 AND guild_id=$2",
                 ticket_id,
                 guild_id,
             )
+
         return data
 
-    # ---------- UPDATE ----------
-
+    # ---------- UPDATE PANEL ----------
     @staticmethod
     async def update_panel(guild_id: int, ticket_id: int, data: dict):
-        pool = await get_pool()
+        pool = get_connection()
+
         async with pool.acquire() as conn:
             await conn.execute(
                 """
@@ -84,9 +66,11 @@ class TicketService:
                 guild_id,
             )
 
+    # ---------- UPDATE TOPIC ----------
     @staticmethod
     async def update_topic(guild_id: int, ticket_id: int, data: dict):
-        pool = await get_pool()
+        pool = get_connection()
+
         async with pool.acquire() as conn:
             await conn.execute(
                 """
@@ -109,14 +93,14 @@ class TicketService:
             )
 
     # ---------- THREAD ----------
-
     @staticmethod
     async def create_thread(
         interaction: discord.Interaction,
         ticket_id: int,
         user: discord.Member,
     ):
-        pool = await get_pool()
+        pool = get_connection()
+
         async with pool.acquire() as conn:
             data = await conn.fetchrow(
                 """
@@ -138,6 +122,7 @@ class TicketService:
                 name=f"ticket-{user.name}",
                 type=discord.ChannelType.private_thread,
             )
+
             await thread.add_user(user)
 
             if data["staff_id"]:
