@@ -1,5 +1,6 @@
 import discord
 
+
 class TitleModal(discord.ui.Modal, title="Editar Título"):
     novo_titulo = discord.ui.TextInput(label="Novo título")
 
@@ -17,7 +18,10 @@ class TitleModal(discord.ui.Modal, title="Editar Título"):
 
 
 class DescModal(discord.ui.Modal, title="Editar Descrição"):
-    descricao = discord.ui.TextInput(label="Descrição", style=discord.TextStyle.paragraph)
+    descricao = discord.ui.TextInput(
+        label="Descrição",
+        style=discord.TextStyle.paragraph
+    )
 
     def __init__(self, view):
         super().__init__()
@@ -33,7 +37,10 @@ class DescModal(discord.ui.Modal, title="Editar Descrição"):
 
 
 class ColorModal(discord.ui.Modal, title="Editar Cor"):
-    cor = discord.ui.TextInput(label="Cor (hex)", placeholder="#3498db")
+    cor = discord.ui.TextInput(
+        label="Cor (hex)",
+        placeholder="#3498db"
+    )
 
     def __init__(self, view):
         super().__init__()
@@ -41,9 +48,13 @@ class ColorModal(discord.ui.Modal, title="Editar Cor"):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            self.view.color = int(self.cor.value.replace("#", ""), 16)
+            value = int(self.cor.value.replace("#", ""), 16)
+            self.view.color = discord.Color(value)
         except:
-            await interaction.response.send_message("Cor inválida!", ephemeral=True)
+            await interaction.response.send_message(
+                "❌ Cor inválida!",
+                ephemeral=True
+            )
             return
 
         await interaction.response.edit_message(
@@ -60,6 +71,14 @@ class ImageModal(discord.ui.Modal, title="Imagem"):
         self.view = view
 
     async def on_submit(self, interaction: discord.Interaction):
+
+        if not self.url.value.startswith("http"):
+            await interaction.response.send_message(
+                "❌ URL inválida!",
+                ephemeral=True
+            )
+            return
+
         self.view.image = self.url.value
 
         await interaction.response.edit_message(
