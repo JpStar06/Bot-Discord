@@ -3,11 +3,11 @@ import discord
 class TicketEmbed:
 
     @staticmethod
-    def painel(data):
+    def painel(data: dict):
         embed = discord.Embed(
-            title=data["titulo"],
-            description=data["descricao"],
-            color=data["cor"]
+            title=data.get("titulo", "Sem título"),
+            description=data.get("descricao", "Sem descrição"),
+            color=data.get("cor", 0x3498db)
         )
 
         if data.get("imagem"):
@@ -16,21 +16,14 @@ class TicketEmbed:
         return embed
 
     @staticmethod
-    def topico(data):
+    def topico(data: dict):
         embed = discord.Embed(
-            title=data["titulo_cliente"] or "Ticket",
-            description=data["descricao_cliente"] or "Aguarde atendimento",
-            color=data["cor_cliente"] or 0xFF0000
+            title=data.get("titulo_cliente", "Ticket"),
+            description=data.get("descricao_cliente", "Aguarde atendimento"),
+            color=data.get("cor_cliente", 0xFF0000)
         )
 
         if data.get("imagem_cliente"):
             embed.set_image(url=data["imagem_cliente"])
 
         return embed
-    
-def acerto(msg: str):
-    return discord.Embed(
-        title="concluido",
-        description=msg,
-        color=discord.Color.green()
-    )
