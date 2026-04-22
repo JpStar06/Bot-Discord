@@ -1,50 +1,103 @@
 import discord
+import asyncio
 from cogs.ticket.services import TicketService
 from cogs.ticket.embeds import TicketEmbed
-import asyncio
+from cogs.ticket.modals import (
+    PanelTituloModal, PanelDescricaoModal, PanelCorModal, PanelImagemModal,
+    TopicTituloModal, TopicDescricaoModal, TopicCorModal, TopicImagemModal,
+    TopicStaffModal,
+)
+
+
+# ─────────────────────────────────────────────
+#  EDITAR PAINEL
+# ─────────────────────────────────────────────
 
 class EditPanelView(discord.ui.View):
 
-    def __init__(self, data, ticket_id, guild_id):
+    def __init__(self, data, ticket_id, guild_id, author):
         super().__init__(timeout=300)
-        self.data = data
+        self.data = dict(data)
         self.ticket_id = ticket_id
         self.guild_id = guild_id
+        self.author = author
 
-    @discord.ui.button(label="Salvar", style=discord.ButtonStyle.success)
+    def build_embed(self):
+        return TicketEmbed.painel(self.data)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        return interaction.user == self.author
+
+    @discord.ui.button(label="✏️ Título", style=discord.ButtonStyle.primary)
+    async def editar_titulo(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(PanelTituloModal(self))
+
+    @discord.ui.button(label="📝 Descrição", style=discord.ButtonStyle.secondary)
+    async def editar_descricao(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(PanelDescricaoModal(self))
+
+    @discord.ui.button(label="🎨 Cor", style=discord.ButtonStyle.success)
+    async def editar_cor(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(PanelCorModal(self))
+
+    @discord.ui.button(label="🖼️ Imagem", style=discord.ButtonStyle.secondary)
+    async def editar_imagem(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(PanelImagemModal(self))
+
+    @discord.ui.button(label="💾 Salvar", style=discord.ButtonStyle.green, row=1)
     async def salvar(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await TicketService.update_panel(self.guild_id, self.ticket_id, self.data)
+        await interaction.response.send_message("✅ Painel salvo!", ephemeral=True)
 
-        await TicketService.update_panel(
-            self.guild_id,
-            self.ticket_id,
-            self.data
-        )
 
-        await interaction.response.send_message(
-            "✅ Alterações salvas!",
-            ephemeral=True
-        )
+# ─────────────────────────────────────────────
+#  EDITAR TÓPICO
+# ─────────────────────────────────────────────
 
 class EditTopicView(discord.ui.View):
 
-    def __init__(self, data, ticket_id, guild_id):
-        super().__init__(timeout=None)
-        self.data = data
+    def __init__(self, data, ticket_id, guild_id, author):
+        super().__init__(timeout=300)
+        self.data = dict(data)
         self.ticket_id = ticket_id
         self.guild_id = guild_id
+        self.author = author
 
-    @discord.ui.button(label="Salvar", style=discord.ButtonStyle.success, custom_id="save_topic")
+    def build_embed(self):
+        return TicketEmbed.topico(self.data)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        return interaction.user == self.author
+
+    @discord.ui.button(label="✏️ Título", style=discord.ButtonStyle.primary)
+    async def editar_titulo(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(TopicTituloModal(self))
+
+    @discord.ui.button(label="📝 Descrição", style=discord.ButtonStyle.secondary)
+    async def editar_descricao(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(TopicDescricaoModal(self))
+
+    @discord.ui.button(label="🎨 Cor", style=discord.ButtonStyle.success)
+    async def editar_cor(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(TopicCorModal(self))
+
+    @discord.ui.button(label="🖼️ Imagem", style=discord.ButtonStyle.secondary)
+    async def editar_imagem(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(TopicImagemModal(self))
+
+    @discord.ui.button(label="👮 Staff", style=discord.ButtonStyle.secondary)
+    async def editar_staff(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(TopicStaffModal(self))
+
+    @discord.ui.button(label="💾 Salvar", style=discord.ButtonStyle.green, row=1)
     async def salvar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        print("clicou")
-        await TicketService.update_topic(
-            self.guild_id,
-            self.ticket_id,
-            self.data
-        )
-        await interaction.response.send_message(
-            "✅ Tópico salvo!",
-            ephemeral=True
-        )
+        await TicketService.update_topic(self.guild_id, self.ticket_id, self.data)
+        await interaction.response.send_message("✅ Tópico salvo!", ephemeral=True)
+
+
+# ─────────────────────────────────────────────
+#  TICKET VIEW (botão de abrir ticket no canal)
+# ─────────────────────────────────────────────
 
 class TicketView(discord.ui.View):
 
@@ -59,7 +112,6 @@ class TicketView(discord.ui.View):
         custom_id="abrir_ticket"
     )
     async def abrir_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-
         await interaction.response.defer(ephemeral=True)
 
         thread, data = await TicketService.create_thread(
@@ -77,12 +129,9 @@ class TicketView(discord.ui.View):
 
         if data.get("staff_id"):
             role = interaction.guild.get_role(data["staff_id"])
-            if role:
-                staff_mention = role.mention
-            else:
-                staff_mention = f"⚠️ Cargo de staff (ID: {data['staff_id']}) não encontrado"
+            staff_mention = role.mention if role else f"⚠️ Cargo de staff (ID: {data['staff_id']}) não encontrado"
         else:
-            staff_mention = "@here"   # ou "" se não quiser mencionar ninguém
+            staff_mention = "@here"
 
         await thread.send(
             content=f"{interaction.user.mention} {staff_mention}",
@@ -94,6 +143,11 @@ class TicketView(discord.ui.View):
             f"🎫 Ticket criado: {thread.mention}",
             ephemeral=True
         )
+
+
+# ─────────────────────────────────────────────
+#  FECHAR TICKET
+# ─────────────────────────────────────────────
 
 class CloseTicketView(discord.ui.View):
 
@@ -107,15 +161,12 @@ class CloseTicketView(discord.ui.View):
         custom_id="fechar_ticket"
     )
     async def fechar(self, interaction: discord.Interaction, button: discord.ui.Button):
-
         await interaction.response.send_message(
             "🔒 Fechando em 5 segundos...",
             ephemeral=True
         )
-
         await asyncio.sleep(5)
-
         try:
             await interaction.channel.delete()
-        except:
+        except Exception:
             pass

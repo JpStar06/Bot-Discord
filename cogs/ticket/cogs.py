@@ -3,12 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from cogs.ticket.services import TicketService
 from cogs.ticket.embeds import TicketEmbed, acerto
-from cogs.ticket.view import EditPanelView
-from cogs.ticket.modals import EditPanelModal
-from cogs.ticket.modals import EditTopicModal
-from cogs.ticket.view import TicketView
-from cogs.ticket.embeds import TicketEmbed
-from cogs.ticket.services import TicketService
+from cogs.ticket.view import EditPanelView, EditTopicView, TicketView
 
 
 class Tickets(commands.Cog):
@@ -29,26 +24,49 @@ class Tickets(commands.Cog):
 
         await interaction.response.send_message(f"✅ Ticket criado ID `{ticket_id}`")
 
-    # ---------- EDITAR (AGORA COM MODAL) ----------
-    @tickets.command(name="editar-painel")
+    # ---------- EDITAR PAINEL ----------
+    @tickets.command(name="editar-painel", description="Edita o painel do ticket")
     async def editar(self, interaction: discord.Interaction, id: int):
 
         data = await TicketService.get_ticket(interaction.guild.id, id)
 
         if not data:
             await interaction.response.send_message(
-                "Ticket não encontrado.",
+                "❌ Ticket não encontrado.",
                 ephemeral=True
             )
             return
 
-        modal = EditPanelModal(
-            data,
-            id,
-            interaction.guild.id
+        view = EditPanelView(data, id, interaction.guild.id, interaction.user)
+
+        await interaction.response.send_message(
+            content="👀 Pré-visualização do painel:",
+            embed=view.build_embed(),
+            view=view,
+            ephemeral=True
         )
 
-        await interaction.response.send_modal(modal)
+    # ---------- EDITAR TÓPICO ----------
+    @tickets.command(name="editar-topico", description="Edita o embed do tópico do ticket")
+    async def editar_topico(self, interaction: discord.Interaction, id: int):
+
+        data = await TicketService.get_ticket(interaction.guild.id, id)
+
+        if not data:
+            await interaction.response.send_message(
+                "❌ Ticket não encontrado.",
+                ephemeral=True
+            )
+            return
+
+        view = EditTopicView(data, id, interaction.guild.id, interaction.user)
+
+        await interaction.response.send_message(
+            content="👀 Pré-visualização do tópico:",
+            embed=view.build_embed(),
+            view=view,
+            ephemeral=True
+        )
 
     # ---------- ENVIAR ----------
     @tickets.command(name="enviar", description="Envia painel de ticket")
@@ -61,7 +79,7 @@ class Tickets(commands.Cog):
 
         if not data:
             await interaction.response.send_message(
-                "Ticket não encontrado.",
+                "❌ Ticket não encontrado.",
                 ephemeral=True
             )
             return
@@ -70,30 +88,10 @@ class Tickets(commands.Cog):
 
         await canal.send(embed=embed, view=TicketView(id))
 
-        await interaction.response.send_message(embed=acerto(f"✅ Ticket `{id}` enviado para {canal.mention}!"))
-    
-    @tickets.command(name="editar-topico", description="Edita o embed do tópico do ticket")
-    async def editar_topico(self, interaction: discord.Interaction, id: int):
-
-        data = await TicketService.get_ticket(
-            interaction.guild.id,
-            id
+        await interaction.response.send_message(
+            embed=acerto(f"✅ Ticket `{id}` enviado para {canal.mention}!")
         )
 
-        if not data:
-            await interaction.response.send_message(
-                "Ticket não encontrado.",
-                ephemeral=True
-            )
-            return
-
-        modal = EditTopicModal(
-            data,
-            id,
-            interaction.guild.id
-        )
-
-        await interaction.response.send_modal(modal)
 
 async def setup(bot):
     await bot.add_cog(Tickets(bot))
