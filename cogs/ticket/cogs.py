@@ -12,7 +12,7 @@ class Tickets(commands.Cog):
         self.pool = None
 
     async def cog_load(self):
-        self.pool = await get_connection()
+        self.pool = get_connection()
 
     tickets = app_commands.Group(name="tickets", description="Comandos de tickets")
 
