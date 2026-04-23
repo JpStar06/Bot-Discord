@@ -172,3 +172,12 @@ def tutorial_embed3():
     embed4.set_footer(text="Aiko • Sistema de Economia")
 
     return embed4
+
+def tutorial_embed3():
+    embed4 = discord.Embed(
+        title="**Sobre esse chat**",
+        description=(
+            "O use como painel de comandos para os comandos de tickets e embeds"
+        ),
+        color=discord.Color.pink()
+    )
