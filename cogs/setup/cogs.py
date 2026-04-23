@@ -59,7 +59,7 @@ class SetupCog(commands.Cog):
 
         embed1.add_field(
             name="📤 Enviar ticket",
-            value="Use `/tickets enviar <id>`",
+            value="Use `/tickets enviar <id_tickets><id_canal>`",
             inline=False
         )
 
