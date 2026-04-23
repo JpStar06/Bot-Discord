@@ -1,139 +1,127 @@
-import re
-
 import discord
-from cogs.ticket.embeds import TicketEmbed
-from cogs.ticket.view import EditPanelView, EditTopicView
 
 
-class EditPanelModal(discord.ui.Modal, title="Editar Painel"):
+class TitleModal(discord.ui.Modal, title="Editar Título"):
+    novo_titulo = discord.ui.TextInput(label="Novo título")
 
-    def __init__(self, data, ticket_id, guild_id):
+    def __init__(self, view):
         super().__init__()
-
-        self.ticket_id = ticket_id
-        self.guild_id = guild_id
-        self.data = dict(data)
-
-        self.titulo = discord.ui.TextInput(
-            label="Título",
-            default=data["titulo"],
-        )
-        self.descricao = discord.ui.TextInput(
-            label="Descrição",
-            style=discord.TextStyle.paragraph,
-            default=data["descricao"],
-        )
-        self.cor = discord.ui.TextInput(
-            label="Cor (hex ou int)",
-            default=str(data["cor"]),
-        )
-        self.imagem = discord.ui.TextInput(
-            label="URL da imagem",
-            required=False,
-            default=data.get("imagem"),
-        )
-
-        self.add_item(self.titulo)
-        self.add_item(self.descricao)
-        self.add_item(self.cor)
-        self.add_item(self.imagem)
+        self.view = view
 
     async def on_submit(self, interaction: discord.Interaction):
-        self.data.update({
-            "titulo": self.titulo.value,
-            "descricao": self.descricao.value,
-            "cor": int(self.cor.value, 0),
-            "imagem": self.imagem.value or None,
-        })
+        self.view.title = self.novo_titulo.value
 
-        embed = TicketEmbed.painel(self.data)
-        view = EditPanelView(self.data, self.ticket_id, self.guild_id)
-
-        await interaction.response.send_message(
-            content="👀 Pré-visualização:",
-            embed=embed,
-            view=view,
-            ephemeral=True,
+        await interaction.response.edit_message(
+            embed=self.view.build_embed(),
+            view=self.view
         )
 
 
-class EditTopicModal(discord.ui.Modal, title="Editar Tópico do Ticket"):
+class DescModal(discord.ui.Modal, title="Editar Descrição"):
+    descricao = discord.ui.TextInput(
+        label="Descrição",
+        style=discord.TextStyle.paragraph
+    )
 
-    def __init__(self, data, ticket_id, guild_id):
+    def __init__(self, view):
         super().__init__()
-
-        self.data = dict(data)
-        self.ticket_id = ticket_id
-        self.guild_id = guild_id
-
-        self.staff = discord.ui.TextInput(
-            label="Cargo Staff",
-            placeholder="Nome do cargo (ex: adm) ou ID numérico",
-            required=False,
-            default=str(data.get("staff_id") or ""),
-        )
-        self.titulo = discord.ui.TextInput(
-            label="Título",
-            default=data["titulo_cliente"],
-        )
-        self.descricao = discord.ui.TextInput(
-            label="Descrição",
-            style=discord.TextStyle.paragraph,
-            default=data["descricao_cliente"],
-        )
-        self.cor = discord.ui.TextInput(
-            label="Cor (int ou hex)",
-            default=str(data["cor_cliente"]),
-        )
-        self.imagem = discord.ui.TextInput(
-            label="URL da imagem",
-            required=False,
-            default=data.get("imagem_cliente"),
-        )
-
-        self.add_item(self.titulo)
-        self.add_item(self.descricao)
-        self.add_item(self.cor)
-        self.add_item(self.imagem)
-        self.add_item(self.staff)
+        self.view = view
 
     async def on_submit(self, interaction: discord.Interaction):
-        staff_id = None
-        valor = self.staff.value.strip().lstrip("@")
+        self.view.description = self.descricao.value
 
-        if valor:
-            if valor.isdigit():
-                # Usuário colou o ID numérico direto
-                staff_id = int(valor)
-            else:
-                # Busca o cargo pelo nome no servidor
-                role = discord.utils.find(
-                    lambda r: r.name.lower() == valor.lower(),
-                    interaction.guild.roles,
-                )
-                if role:
-                    staff_id = role.id
-                else:
-                    await interaction.response.send_message(
-                        f"❌ Cargo `{valor}` não encontrado no servidor. Verifique o nome e tente novamente.",
-                        ephemeral=True,
-                    )
-                    return
+        await interaction.response.edit_message(
+            embed=self.view.build_embed(),
+            view=self.view
+        )
 
-        self.data.update({
-            "titulo_cliente": self.titulo.value,
-            "descricao_cliente": self.descricao.value,
-            "cor_cliente": int(self.cor.value, 0),
-            "imagem_cliente": self.imagem.value or None,
-            "staff_id": staff_id,
-        })
 
-        embed = TicketEmbed.topico(self.data)
-        view = EditTopicView(self.data, self.ticket_id, self.guild_id)
+class ColorModal(discord.ui.Modal, title="Editar Cor"):
+    cor = discord.ui.TextInput(
+        label="Cor (hex)",
+        placeholder="#3498db"
+    )
 
-        await interaction.response.send_message(
-            content="👀 Pré-visualização do tópico:",
-            embed=embed,
-            view=view,
-            ephemeral=True,
+    def __init__(self, view):
+        super().__init__()
+        self.view = view
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            value = int(self.cor.value.replace("#", ""), 16)
+            self.view.color = discord.Color(value)
+        except:
+            await interaction.response.send_message(
+                "❌ Cor inválida!",
+                ephemeral=True
+            )
+            return
+
+        await interaction.response.edit_message(
+            embed=self.view.build_embed(),
+            view=self.view
+        )
+
+
+class ImageModal(discord.ui.Modal, title="Imagem"):
+    url = discord.ui.TextInput(label="URL da imagem")
+
+    def __init__(self, view):
+        super().__init__()
+        self.view = view
+
+    async def on_submit(self, interaction: discord.Interaction):
+
+        if not self.url.value.startswith("http"):
+            await interaction.response.send_message(
+                "❌ URL inválida!",
+                ephemeral=True
+            )
+            return
+
+        self.view.image = self.url.value
+
+        await interaction.response.edit_message(
+            embed=self.view.build_embed(),
+            view=self.view
+        )
+
+class StaffModal(discord.ui.Modal, title="Definir cargo staff"):
+    cargo = discord.ui.TextInput(
+        label="ID do cargo ou @menção",
+        placeholder="@Staff ou 123456789"
+    )
+
+    def __init__(self, view):
+        super().__init__()
+        self.view = view
+
+    async def on_submit(self, interaction: discord.Interaction):
+
+        value = self.cargo.value.replace("<@&", "").replace(">", "")
+
+        try:
+            role_id = int(value)
+        except:
+            await interaction.response.send_message(
+                "❌ Cargo inválido!",
+                ephemeral=True
+            )
+            return
+
+        role = interaction.guild.get_role(role_id)
+
+        if not role:
+            await interaction.response.send_message(
+                "❌ Cargo não encontrado!",
+                ephemeral=True
+            )
+            return
+
+        self.view.staff_role = role
+        self.view.staff_id = role.id
+
+        await interaction.response.edit_message(
+            embed=self.view.build_embed(),
+            view=self.view
         )
