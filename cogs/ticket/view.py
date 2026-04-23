@@ -1,4 +1,6 @@
 import discord
+from datetime import datetime
+import io
 from .modals import (
     TitleModal,
     DescModal,
@@ -181,7 +183,8 @@ class TicketOpenView(discord.ui.View):
 
             await channel.send(
                 content=f"{user.mention}" + (f" {staff_role.mention}" if staff_role else ""),
-                embed=embed
+                embed=embed,
+                view=CloseTicketView()
             )
 
             await interaction.response.send_message(
@@ -194,3 +197,60 @@ class TicketOpenView(discord.ui.View):
                 f"❌ Erro ao criar ticket: {e}",
                 ephemeral=True
             )
+
+class CloseTicketView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(
+        label="❌ Fechar Ticket",
+        style=discord.ButtonStyle.red,
+        custom_id="close_ticket"
+    )
+    async def fechar(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        await interaction.response.defer(ephemeral=True)
+
+        channel = interaction.channel
+
+        # 🧾 gerar transcript
+        messages = []
+        async for msg in channel.history(limit=None, oldest_first=True):
+            timestamp = msg.created_at.strftime("%d/%m/%Y %H:%M")
+            content = msg.content or ""
+
+            if msg.attachments:
+                content += " " + " ".join([a.url for a in msg.attachments])
+
+            messages.append(f"[{timestamp}] {msg.author}: {content}")
+
+        transcript_text = "\n".join(messages)
+
+        file = discord.File(
+            io.BytesIO(transcript_text.encode()),
+            filename=f"transcript-{channel.name}.txt"
+        )
+
+        try:
+            # 👤 manda no privado de quem clicou
+            await interaction.user.send(
+                f"📄 Transcript do ticket `{channel.name}`",
+                file=file
+            )
+        except:
+            pass
+
+        # 📢 opcional: log em canal
+        log_channel = discord.utils.get(channel.guild.text_channels, name="logs-tickets")
+        if log_channel:
+            await log_channel.send(
+                f"📄 Ticket `{channel.name}` fechado por {interaction.user.mention}",
+                file=file
+            )
+
+        # ⏳ aviso antes de deletar
+        await interaction.followup.send("🗑 Fechando ticket em 3 segundos...")
+
+        await discord.utils.sleep_until(datetime.utcnow() + discord.timedelta(seconds=3))
+
+        await channel.delete()
