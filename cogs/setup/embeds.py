@@ -92,8 +92,8 @@ def tutorial_embed2():
     embed3.add_field(
         name="📤 Enviando o embed",
         value=(
-            "`/embeds enviar <id> <canal>`\n\n"
-            "Envia o embed para o canal desejado."
+            "`/embeds enviar <id> <canal>`\n"
+            "Envia o embed para o canal desejado.\n\n"
         ),
         inline=False
     )
@@ -109,3 +109,53 @@ def tutorial_embed2():
     embed3.set_footer(text="Aiko • Sistema de Embeds")
 
     return embed3
+
+def tutorial_embed3():
+    embed4 = discord.Embed(
+        title="💰 Sistema de Economia",
+        description=(
+            "O sistema de economia da Aiko é simples, intuitivo e eficiente.\n"
+            "Ele permite que membros ganhem moedas virtuais através de atividades no servidor e as utilizem em recompensas personalizadas.\n\n"
+            "📌 Os membros podem ganhar moedas jogando os minigames da Aiko! "
+            "As moedas podem ser usadas livremente, seja para obter cargos com cores diferentes "
+            "ou desbloquear conteúdos exclusivos. A escolha é totalmente sua. \nMas se lembre, é um pouco facil ganhar moedas, então coloque valores altos!"
+            "\n\n ⚠️ **Aviso:** A Aiko não se responsabiliza por trocas, negociações ou acordos realizados entre membros. "
+            "Fique atento a possíveis golpes e nunca compartilhe informações pessoais."
+        ),
+        color=discord.Color.pink()
+    )
+    embed4.add_field(
+        name="💰 **Como ganhar moedas**",
+        value=(
+            "O sistema de economia da Aiko oferece várias formas de ganhar coins, seja trabalhando, coletando recompensas diárias ou testando sua sorte no casino.\n\n"
+            "🪙 **Formas de ganhar coins:**\n"
+            "• `/eco diario` → Colete sua recompensa diária e aumente seu streak 🔥\n"
+            "• `/eco work` → Trabalhe e receba coins com base em um emprego aleatório\n"
+            "• `/box abrir` → Abra lootboxes para ganhar recompensas\n"
+            "• `/casino ...` → Use os jogos de aposta para tentar multiplicar suas moedas\n\n"
+            "🎲 **Jogos de aposta:**\n"
+            "• `/casino coinflip` → Escolha entre cara ou coroa\n"
+            "• `/casino dice` → Role um dado contra o bot\n"
+            "• `/casino slots` → Teste sua sorte no caça-níquel\n"
+            "• `/casino blackjack` → Use estratégia para vencer o bot\n\n"
+
+            "📌 **Outras funções úteis:**\n"
+            "• `/eco carteira` → Veja suas coins, boxes e streak\n"
+            "• `/eco pay` → Envie coins para outros membros\n"
+            "• `/eco rank` → Veja os jogadores mais ricos do servidor\n"
+            "• `/box comprar` → Compre lootboxes\n\n"
+
+            "⏳ **Importante:**\n"
+            "Alguns comandos possuem cooldown para evitar spam.\n"
+            "Você só pode usar e apostar valores que possui.\n\n"
+
+            "⚠️ **Dica:**\n"
+            "Use suas coins com sabedoria — jogos de aposta podem tanto aumentar quanto diminuir seu saldo.\n"
+            "Tente equilibrar entre sorte, estratégia e consistência para crescer na economia! :3"
+        ),
+        inline=False
+    )
+
+    embed4.set_footer(text="Aiko • Sistema de Economia")
+
+    return embed4
