@@ -29,7 +29,7 @@ class SetupCog(commands.Cog):
             }
 
             channel = await guild.create_text_channel(
-                name="aiko-tuto",
+                name="aiko-painel",
                 overwrites=overwrites
             )
 
