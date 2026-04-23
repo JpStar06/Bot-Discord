@@ -9,7 +9,7 @@ class setup(commands.Cog):
 
     @app_commands.command(name="setup", description="Configura o sistema do bot")
     @app_commands.checks.has_permissions(administrator=True)
-    async def setup(interaction: discord.Interaction):
+    async def setup(self, interaction: discord.Interaction):
 
         guild = interaction.guild
 
