@@ -1,22 +1,63 @@
 import discord
-def embed1():
+
+def tutorial_embed():
     embed = discord.Embed(
         title="📌 Bem-vindo ao tutorial da Aiko!",
         description=(
-            "Aqui vou te mostrar como usar o sistema de tickets, embeds e economia da Aiko!\n\nPrometo que tudo será bem simples e fácil de entender, então vamos lá! :3"
+            "Aqui você vai aprender a usar o sistema de tickets, embeds e economia da Aiko "
+            "de forma simples e rápida.\n\n"
+            "Prometo que tudo será fácil de entender, então vamos lá! :3"
         ),
         color=discord.Color.pink()
     )
-    return embed
 
-def embed2():
-    embed = discord.Embed(
-        title="🎫 Sistema de Tickets",
-        description=(
-            "O sistema de tickets da Aiko é bem simples e eficiente. Ele permite que os membros criem tickets para solicitar ajuda ou suporte, e a equipe de staff pode gerenciar esses tickets facilmente. E tem o toque final, quando os tickets são fechados eles enviam um transcript para a staff e o usuário, então tudo é salvo.\n\n"
-            "Para criar o seu primeiro ticket, use `/ickets criar`, isso ira criar um ticket padrão, depois use `/ickets editar <id>` para personalizar o ticket, nas opções você poderá alterar o título, descrição, cor, atendente(o cargo que ira atender o ticket) e até uma imagem.\n\n E por fim use `/ickets enviar <id> <canal>` para enviar o ticket para um canal específico."
-            "\n\nEu utilizo sistemas de botões tanto para abrir e fechar tickets, quanto para para edita-los, então é tudo bem intuitivo!"
+    # Sistema de tickets
+    embed.add_field(
+        name="🎫 Sistema de Tickets",
+        value=(
+            "O sistema de tickets da Aiko é simples, intuitivo e eficiente.\n"
+            "Ele permite que membros criem tickets para suporte enquanto a staff gerencia tudo facilmente.\n\n"
+            "📌 Quando um ticket é fechado, um **transcript** é enviado para o usuário e a equipe."
         ),
-        color=discord.Color.green()
+        inline=False
     )
+
+    # Criar ticket
+    embed.add_field(
+        name="🛠️ Como criar um ticket",
+        value=(
+            "`/tickets criar` → cria um ticket padrão\n"
+            "`/tickets editar <id>` → personaliza o ticket\n\n"
+            "**Você pode alterar:**\n"
+            "• Título\n"
+            "• Descrição\n"
+            "• Cor\n"
+            "• Cargo responsável\n"
+            "• Imagem"
+        ),
+        inline=False
+    )
+
+    # Enviar painel
+    embed.add_field(
+        name="📤 Enviando o painel",
+        value=(
+            "`/tickets enviar <id> <canal>`\n\n"
+            "Envia o painel de ticket para o canal desejado."
+        ),
+        inline=False
+    )
+
+    # Interface
+    embed.add_field(
+        name="✨ Interface",
+        value=(
+            "O sistema utiliza botões para abrir, fechar e editar tickets,\n"
+            "tornando tudo mais prático e intuitivo."
+        ),
+        inline=False
+    )
+
+    embed.set_footer(text="Aiko • Sistema de Tickets")
+
     return embed
