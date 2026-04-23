@@ -1,6 +1,7 @@
 import discord
 from datetime import datetime
 import io
+import asyncio
 from .modals import (
     TitleModal,
     DescModal,
@@ -251,6 +252,6 @@ class CloseTicketView(discord.ui.View):
         # ⏳ aviso antes de deletar
         await interaction.followup.send("🗑 Fechando ticket em 3 segundos...")
 
-        await discord.utils.sleep_until(datetime.utcnow() + discord.timedelta(seconds=3))
+        await asyncio.sleep(3)
 
         await channel.delete()
