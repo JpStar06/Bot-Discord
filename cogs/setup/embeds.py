@@ -1,6 +1,6 @@
 import discord
 
-def tutorial_embed():
+def tutorial():
     embed = discord.Embed(
         title="📌 Bem-vindo ao tutorial da Aiko!",
         description=(
@@ -11,19 +11,21 @@ def tutorial_embed():
         color=discord.Color.pink()
     )
 
-    # Sistema de tickets
-    embed.add_field(
-        name="🎫 Sistema de Tickets",
-        value=(
+    return embed
+
+def tutorial_embed():
+    embed2 = discord.Embed(
+        title="🎫 Sistema de Tickets",
+        description=(
             "O sistema de tickets da Aiko é simples, intuitivo e eficiente.\n"
             "Ele permite que membros criem tickets para suporte enquanto a staff gerencia tudo facilmente.\n\n"
             "📌 Quando um ticket é fechado, um **transcript** é enviado para o usuário e a equipe."
         ),
-        inline=False
+        color=discord.Color.pink()
     )
 
     # Criar ticket
-    embed.add_field(
+    embed2.add_field(
         name="🛠️ Como criar um ticket",
         value=(
             "`/tickets criar` → cria um ticket padrão\n"
@@ -39,7 +41,7 @@ def tutorial_embed():
     )
 
     # Enviar painel
-    embed.add_field(
+    embed2.add_field(
         name="📤 Enviando o painel",
         value=(
             "`/tickets enviar <id> <canal>`\n\n"
@@ -49,7 +51,7 @@ def tutorial_embed():
     )
 
     # Interface
-    embed.add_field(
+    embed2.add_field(
         name="✨ Interface",
         value=(
             "O sistema utiliza botões para abrir, fechar e editar tickets,\n"
@@ -58,6 +60,52 @@ def tutorial_embed():
         inline=False
     )
 
-    embed.set_footer(text="Aiko • Sistema de Tickets")
+    embed2.set_footer(text="Aiko • Sistema de Tickets")
 
-    return embed
+    return embed2
+
+def tutorial_embed2():
+    embed3 = discord.Embed(
+        title="📋 Sistema de Embeds",
+        description=(
+            "O sistema de embeds da Aiko é simples, intuitivo e eficiente.\n"
+            "Ele permite que membros criem embeds personalizados para comunicação com os usuários.\n\n"
+            "📌 Os embeds podem conter título, descrição, cor, imagens e campos personalizados."
+        ),
+        color=discord.Color.pink()
+    )
+    
+    embed3.add_field(
+        name="🛠️ Como criar um embed",
+        value=(
+            "`/embeds criar` → cria um embed padrão\n"
+            "`/embeds editar <id>` → personaliza o embed\n\n"
+            "**Você pode alterar:**\n"
+            "• Título\n"
+            "• Descrição\n"
+            "• Cor\n"
+            "• Imagem"
+        ),
+        inline=False
+    )
+
+    embed3.add_field(
+        name="📤 Enviando o embed",
+        value=(
+            "`/embeds enviar <id> <canal>`\n\n"
+            "Envia o embed para o canal desejado."
+        ),
+        inline=False
+    )
+    embed3.add_field(
+        name="✨ Interface",
+        value=(
+            "O sistema utiliza botões para editar os embeds,\n"
+            "tornando tudo mais prático e intuitivo."
+        ),
+        inline=False
+    )
+
+    embed3.set_footer(text="Aiko • Sistema de Embeds")
+
+    return embed3
