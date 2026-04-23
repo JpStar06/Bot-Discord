@@ -17,7 +17,7 @@ class SetupCog(commands.Cog):
         guild = interaction.guild
 
         # 📁 procurar canal
-        channel = discord.utils.get(guild.text_channels, name="aiko-tuto")
+        channel = discord.utils.get(guild.text_channels, name="aiko-painel")
 
         # 📁 criar se não existir
         if not channel:
