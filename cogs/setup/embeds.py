@@ -115,43 +115,56 @@ def tutorial_embed3():
         title="💰 Sistema de Economia",
         description=(
             "O sistema de economia da Aiko é simples, intuitivo e eficiente.\n"
-            "Ele permite que membros ganhem moedas virtuais através de atividades no servidor e as utilizem em recompensas personalizadas.\n\n"
-            "📌 Os membros podem ganhar moedas jogando os minigames da Aiko! "
-            "As moedas podem ser usadas livremente, seja para obter cargos com cores diferentes "
-            "ou desbloquear conteúdos exclusivos. A escolha é totalmente sua. \nMas se lembre, é um pouco facil ganhar moedas, então coloque valores altos!"
-            "\n\n ⚠️ **Aviso:** A Aiko não se responsabiliza por trocas, negociações ou acordos realizados entre membros. "
-            "Fique atento a possíveis golpes e nunca compartilhe informações pessoais."
+            "Ganhe moedas através de atividades no servidor e utilize-as em recompensas personalizadas.\n\n"
+            
+            "📌 Ganhe moedas jogando minigames, trabalhando ou coletando recompensas diárias.\n"
+            "Use como quiser: cargos personalizados, conteúdos exclusivos e muito mais!\n\n"
+            
+            "⚠️ **Aviso:** A Aiko não se responsabiliza por trocas ou negociações entre membros.\n"
+            "Fique atento a golpes e nunca compartilhe informações pessoais."
         ),
         color=discord.Color.pink()
     )
+
     embed4.add_field(
-        name="💰 **Como ganhar moedas**",
+        name="🪙 Como ganhar coins",
         value=(
-            "O sistema de economia da Aiko oferece várias formas de ganhar coins, seja trabalhando, coletando recompensas diárias ou testando sua sorte no casino.\n\n"
-            "🪙 **Formas de ganhar coins:**\n"
-            "• `/eco diario` → Colete sua recompensa diária e aumente seu streak 🔥\n"
-            "• `/eco work` → Trabalhe e receba coins com base em um emprego aleatório\n"
-            "• `/box abrir` → Abra lootboxes para ganhar recompensas\n"
-            "• `/casino ...` → Use os jogos de aposta para tentar multiplicar suas moedas\n\n"
-            "🎲 **Jogos de aposta:**\n"
-            "• `/casino coinflip` → Escolha entre cara ou coroa\n"
-            "• `/casino dice` → Role um dado contra o bot\n"
-            "• `/casino slots` → Teste sua sorte no caça-níquel\n"
-            "• `/casino blackjack` → Use estratégia para vencer o bot\n\n"
+            "• `/eco diario` → Recompensa diária + streak 🔥\n"
+            "• `/eco work` → Trabalhe e ganhe coins\n"
+            "• `/box abrir` → Abra lootboxes\n"
+            "• `/casino` → Aposte e tente multiplicar suas moedas"
+        ),
+        inline=False
+    )
 
-            "📌 **Outras funções úteis:**\n"
-            "• `/eco carteira` → Veja suas coins, boxes e streak\n"
-            "• `/eco pay` → Envie coins para outros membros\n"
-            "• `/eco rank` → Veja os jogadores mais ricos do servidor\n"
-            "• `/box comprar` → Compre lootboxes\n\n"
+    embed4.add_field(
+        name="🎲 Jogos disponíveis",
+        value=(
+            "• Coinflip\n"
+            "• Dice\n"
+            "• Slots\n"
+            "• Blackjack"
+        ),
+        inline=True
+    )
 
-            "⏳ **Importante:**\n"
-            "Alguns comandos possuem cooldown para evitar spam.\n"
-            "Você só pode usar e apostar valores que possui.\n\n"
+    embed4.add_field(
+        name="📌 Outros comandos",
+        value=(
+            "• `/eco carteira`\n"
+            "• `/eco pay`\n"
+            "• `/eco rank`\n"
+            "• `/box comprar`"
+        ),
+        inline=True
+    )
 
-            "⚠️ **Dica:**\n"
-            "Use suas coins com sabedoria — jogos de aposta podem tanto aumentar quanto diminuir seu saldo.\n"
-            "Tente equilibrar entre sorte, estratégia e consistência para crescer na economia! :3"
+    embed4.add_field(
+        name="⏳ Dicas",
+        value=(
+            "• Alguns comandos possuem cooldown\n"
+            "• Aposte apenas o que você possui\n"
+            "• Nem sempre a sorte está do seu lado :3"
         ),
         inline=False
     )
