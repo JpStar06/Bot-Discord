@@ -173,7 +173,7 @@ def tutorial_embed3():
 
     return embed4
 
-def tutorial_embed4():
+def setupfinal():
     embed4 = discord.Embed(
         title="**Sobre esse chat**",
         description=(
